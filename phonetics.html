@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESL Phonetic Alphabet & Converter</title>
-    <!-- Proteção contra indexação em buscadores -->
+    <!-- Prevent search engines from indexing -->
     <meta name="robots" content="noindex, nofollow">
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -24,15 +24,15 @@
 <body class="min-h-screen flex flex-col justify-between p-6 md:p-10">
 
     <div class="max-w-5xl mx-auto w-full">
-        <!-- Cabeçalho -->
+        <!-- Header -->
         <header class="flex flex-col md:flex-row items-center justify-between border-b border-[#502064]/20 pb-6 mb-8 gap-4">
             <div>
-                <a href="index.html" class="text-xs uppercase tracking-widest text-[#502064] font-bold hover:underline mb-1 inline-block">&larr; Voltar para a Biblioteca</a>
+                <a href="index.html" class="text-xs uppercase tracking-widest text-[#502064] font-bold hover:underline mb-1 inline-block">&larr; Back to Library</a>
                 <h1 class="font-cinzel text-3xl md:text-4xl font-bold tracking-wider text-[#502064]">
                     Interactive Phonetic Chart
                 </h1>
             </div>
-            <!-- Seletor de Sotaque (US / UK) -->
+            <!-- Accent Toggle (US / UK) -->
             <div class="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-[#502064]/20">
                 <span class="text-xs font-bold uppercase tracking-wider px-2 text-[#502064]">Accent:</span>
                 <button id="btn-us" onclick="setAccent('us')" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-[#502064] text-white shadow">
@@ -44,44 +44,44 @@
             </div>
         </header>
 
-        <!-- Seção do Conversor de Texto com Transcrição Fonética -->
+        <!-- Word Converter & IPA Transcription Section -->
         <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10 mb-10">
-            <h2 class="font-cinzel text-xl font-bold text-[#502064] mb-3">Conversor de Palavras & Transcrição IPA</h2>
-            <p class="text-sm text-gray-600 mb-4">Digite uma palavra em inglês para ver sua representação fonética aproximada e escutar a pronúncia:</p>
+            <h2 class="font-cinzel text-xl font-bold text-[#502064] mb-3">Word Converter & IPA Transcription</h2>
+            <p class="text-sm text-gray-600 mb-4">Type an English word or phrase to see its phonetic transcription and listen to the audio:</p>
             
             <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                <input type="text" id="word-input" placeholder="Ex: cat, sheep, computer..." oninput="handleTextConversion()"
+                <input type="text" id="word-input" placeholder="Type a word (e.g. activity, beautiful)..." 
                        class="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-[#502064] text-lg font-medium">
-                <button onclick="speakInputText()" class="bg-[#6B0F1A] hover:bg-[#502064] text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow">
-                    🔊 Ouvir Áudio
+                <button onclick="handleTextConversion()" class="bg-[#6B0F1A] hover:bg-[#502064] text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow">
+                    🔍 Convert & Listen
                 </button>
             </div>
 
-            <!-- Caixa de Exibição da Transcrição Fonética Gerada -->
+            <!-- Phonetic Output Display Box -->
             <div class="bg-[#F8F5F9] p-4 rounded-xl border border-[#502064]/20 flex items-center justify-between">
                 <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#502064] block">Transcrição Fonética Estimada (IPA):</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#502064] block">IPA Transcription:</span>
                     <span id="phonetic-output" class="text-2xl font-bold text-gray-800 tracking-wide font-mono">/ ... /</span>
                 </div>
-                <span class="text-xs text-gray-400 italic">Conversão baseada no dicionário</span>
+                <span id="output-status" class="text-xs text-gray-400 italic">Ready</span>
             </div>
         </section>
 
-        <!-- Chart de Fonemas Interativo -->
+        <!-- Interactive Phoneme Chart -->
         <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10">
             <div class="mb-6">
-                <h2 class="font-cinzel text-xl font-bold text-[#502064]">Tabela de Fonemas IPA</h2>
-                <p class="text-xs text-gray-500 mt-1">Clique em qualquer fonema para ouvir o áudio nativo correspondente da sua pasta.</p>
+                <h2 class="font-cinzel text-xl font-bold text-[#502064]">IPA Phoneme Chart</h2>
+                <p class="text-xs text-gray-500 mt-1">Click on any phoneme to hear the native audio sample from your library.</p>
             </div>
 
-            <!-- Grid de Fonemas -->
+            <!-- Phoneme Grid -->
             <div id="phoneme-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                <!-- Gerado via JS -->
+                <!-- Generated via JS -->
             </div>
         </section>
     </div>
 
-    <!-- Rodapé -->
+    <!-- Footer -->
     <footer class="text-center mt-16 text-xs text-gray-500 tracking-wider">
         ESL Phonetics Tool &bull; Clássica Gótica Light Theme
     </footer>
@@ -132,13 +132,14 @@
             { symbol: 'w', label: 'we', file: 'we_2023feb' }
         ];
 
-        // Dicionário de conversão rápida para exemplos comuns de sala de aula
-        const phoneticDictionary = {
-            "cat": "/kæt/", "hat": "/hæt/", "sheep": "/ʃiːp/", "ship": "/ʃɪp/",
-            "pen": "/pen/", "cup": "/kʌp/", "father": "/ˈfɑːðər/", "book": "/bʊk/",
-            "blue": "/bluː/", "bird": "/bɜːd/", "eye": "/aɪ/", "boy": "/bɔɪ/",
-            "mouth": "/maʊθ/", "nose": "/nəʊz/", "fish": "/fɪʃ/", "zoo": "/zuː/",
-            "she": "/ʃiː/", "think": "/θɪŋk/", "this": "/ðɪs/", "dog": "/dɒɡ/"
+        // Extended offline fallback dictionary
+        const fallbackDictionary = {
+            "activity": "/ækˈtɪv.ə.t̬i/", "activiy": "/ækˈtɪv.ə.t̬i/", "cat": "/kæt/", "hat": "/hæt/", 
+            "sheep": "/ʃiːp/", "ship": "/ʃɪp/", "pen": "/pen/", "cup": "/kʌp/", 
+            "father": "/ˈfɑː.ðɚ/", "book": "/bʊk/", "blue": "/bluː/", "bird": "/bɜːd/", 
+            "eye": "/aɪ/", "boy": "/bɔɪ/", "mouth": "/maʊθ/", "nose": "/nəʊz/", 
+            "fish": "/fɪʃ/", "zoo": "/zuː/", "she": "/ʃiː/", "think": "/θɪŋk/", 
+            "this": "/ðɪs/", "dog": "/dɒɡ/", "computer": "/kəmˈpjuː.tər/", "beautiful": "/ˈbjuː.tɪ.fəl/"
         };
 
         function setAccent(accent) {
@@ -159,39 +160,66 @@
             const fileName = `${currentAccent}_phonetics_sound_${fileKey}.mp3`;
             const audio = new Audio(`audio/${fileName}`);
             audio.play().catch(() => {
-                alert(`Áudio não localizado: ${fileName}`);
+                alert(`Audio file not found: ${fileName}`);
             });
         }
 
-        function handleTextConversion() {
-            const word = document.getElementById('word-input').value.trim().toLowerCase();
+        async function handleTextConversion() {
+            const textInput = document.getElementById('word-input');
+            const word = textInput.value.trim().toLowerCase();
             const output = document.getElementById('phonetic-output');
+            const status = document.getElementById('output-status');
 
             if (!word) {
                 output.textContent = "/ ... /";
+                status.textContent = "Ready";
                 return;
             }
 
-            // Se estiver no dicionário manual, mostra a transcrição exata. Senão, faz uma aproximação visual elegante.
-            if (phoneticDictionary[word]) {
-                output.textContent = phoneticDictionary[word];
-            } else {
-                // Simulação heurística interativa para termos digitados na hora
-                output.textContent = `/${word.split('').join('·')}/ (fonético)`;
-            }
-        }
+            status.textContent = "Converting...";
 
-        function speakInputText() {
-            const text = document.getElementById('word-input').value.trim();
-            if (!text) return;
-
+            // 1. Play text-to-speech audio automatically
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
+                const utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = currentAccent === 'uk' ? 'en-GB' : 'en-US';
                 utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
-            } else {
-                alert("Seu navegador não suporta síntese de fala.");
+            }
+
+            // 2. Check local fallback dictionary first
+            if (fallbackDictionary[word]) {
+                output.textContent = fallbackDictionary[word];
+                status.textContent = "From dictionary";
+                return;
+            }
+
+            // 3. Fetch IPA from open pronunciation API if not in fallback dictionary
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+                if (!response.ok) throw new Error('Word not found');
+                
+                const data = await response.json();
+                let phoneticFound = null;
+
+                // Look for phonetic transcription in API response
+                if (data[0].phonetic) {
+                    phoneticFound = data[0].phonetic;
+                } else if (data[0].phonetics && data[0].phonetics.length > 0) {
+                    const match = data[0].phonetics.find(p => p.text);
+                    if (match) phoneticFound = match.text;
+                }
+
+                if (phoneticFound) {
+                    output.textContent = phoneticFound;
+                    status.textContent = "Online API";
+                } else {
+                    output.textContent = `/${word.split('').join('·')}/`;
+                    status.textContent = "Estimated";
+                }
+            } catch (error) {
+                // Fallback character separation if API fails
+                output.textContent = `/${word.split('').join('·')}/`;
+                status.textContent = "Estimated (offline)";
             }
         }
 
