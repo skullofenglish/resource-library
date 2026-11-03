@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESL Phonetic Alphabet & Converter</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <!-- Prevent search engines from indexing -->
     <meta name="robots" content="noindex, nofollow">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts: Cinzel -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         .font-cinzel {
@@ -21,6 +26,7 @@
 <body class="min-h-screen flex flex-col justify-between p-6 md:p-10">
 
     <div class="max-w-5xl mx-auto w-full">
+        <!-- Header -->
         <header class="flex flex-col md:flex-row items-center justify-between border-b border-[#502064]/20 pb-6 mb-8 gap-4">
             <div>
                 <a href="index.html" class="text-xs uppercase tracking-widest text-[#502064] font-bold hover:underline mb-1 inline-block">&larr; Back to Library</a>
@@ -28,6 +34,7 @@
                     Interactive Phonetic Chart
                 </h1>
             </div>
+            <!-- Accent Toggle -->
             <div class="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-[#502064]/20">
                 <span class="text-xs font-bold uppercase tracking-wider px-2 text-[#502064]">Accent:</span>
                 <button id="btn-us" onclick="setAccent('us')" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-[#502064] text-white shadow">
@@ -39,18 +46,20 @@
             </div>
         </header>
 
+        <!-- Word Converter & IPA Transcription Section -->
         <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10 mb-10">
             <h2 class="font-cinzel text-xl font-bold text-[#502064] mb-3">Word Converter & IPA Transcription</h2>
-            <p class="text-sm text-gray-600 mb-4">Type an English word or phrase to see its phonetic transcription and listen to the audio:</p>
+            <p class="text-sm text-gray-600 mb-4">Type an English word or phrase and press Enter to see its phonetic transcription and listen to the audio:</p>
             
             <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                <input type="text" id="word-input" placeholder="Type a word (e.g. pineapple, activity)..." 
+                <input type="text" id="word-input" placeholder="Type a word (e.g. pineapple, activity)..." onkeypress="checkEnter(event)"
                        class="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-[#502064] text-lg font-medium">
                 <button onclick="handleTextConversion()" class="bg-[#6B0F1A] hover:bg-[#502064] text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow">
                     🔍 Convert & Listen
                 </button>
             </div>
 
+            <!-- Phonetic Output Display Box -->
             <div class="bg-[#F8F5F9] p-4 rounded-xl border border-[#502064]/20 flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-[#502064] block">IPA Transcription:</span>
@@ -60,6 +69,7 @@
             </div>
         </section>
 
+        <!-- Interactive Phoneme Chart -->
         <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10">
             <div class="mb-6">
                 <h2 class="font-cinzel text-xl font-bold text-[#502064]">IPA Phoneme Chart</h2>
@@ -67,10 +77,12 @@
             </div>
 
             <div id="phoneme-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                <!-- Generated via JS -->
             </div>
         </section>
     </div>
 
+    <!-- Footer -->
     <footer class="text-center mt-16 text-xs text-gray-500 tracking-wider">
         ESL Phonetics Tool &bull; Clássica Gótica Light Theme
     </footer>
@@ -121,7 +133,6 @@
             { symbol: 'w', label: 'we', file: 'we_2023feb' }
         ];
 
-        // Dicionário extensivo com palavras comuns de ESL + conversor fonético inteligente
         const extensiveDictionary = {
             "pineapple": "/ˈpaɪnˌæp.əl/", "activity": "/ækˈtɪv.ə.t̬i/", "beautiful": "/ˈbjuː.tɪ.fəl/",
             "computer": "/kəmˈpjuː.tər/", "cat": "/kæt/", "hat": "/hæt/", "sheep": "/ʃiːp/", 
@@ -153,8 +164,13 @@
             });
         }
 
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                handleTextConversion();
+            }
+        }
+
         function smartPhoneticApproximation(word) {
-            // Substituições inteligentes de dígrafos e sons comuns do inglês para IPA fluido
             let ipa = word.toLowerCase()
                 .replace(/sh/g, 'ʃ')
                 .replace(/ch/g, 'tʃ')
@@ -162,7 +178,6 @@
                 .replace(/ph/g, 'f')
                 .replace(/ee/g, 'iː')
                 .replace(/oo/g, 'uː')
-                .replace(/oo/g, 'ʊ')
                 .replace(/ai|ay/g, 'eɪ')
                 .replace(/ou/g, 'aʊ')
                 .replace(/oi|oy/g, 'ɔɪ')
@@ -191,7 +206,6 @@
                 return;
             }
 
-            // Fala o áudio nativo do navegador
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = currentAccent === 'uk' ? 'en-GB' : 'en-US';
@@ -199,12 +213,10 @@
                 window.speechSynthesis.speak(utterance);
             }
 
-            // Verifica se está no dicionário manual avançado
             if (extensiveDictionary[word]) {
                 output.textContent = extensiveDictionary[word];
                 status.textContent = "Dictionary";
             } else {
-                // Aplica conversão fonética inteligente baseada em regras do inglês
                 output.textContent = smartPhoneticApproximation(word);
                 status.textContent = "Generated IPA";
             }
