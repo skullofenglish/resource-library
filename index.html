@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Library - ESL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts: Cinzel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Aplicando fontes personalizadas */
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        body {
+            font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+            background-color: #1A1A1A; /* Cor base da sua paleta */
+            color: #D8B4D9;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 md:p-12 flex flex-col justify-between">
+
+    <div class="max-w-4xl mx-auto w-full">
+        <!-- Cabeçalho -->
+        <header class="text-center mb-12 border-b border-[#6B0F1A]/50 pb-6">
+            <h1 class="font-cinzel text-4xl md:text-5xl font-bold tracking-wider text-[#D8B4D9] mb-3">
+                Resource Library
+            </h1>
+            <p class="text-sm md:text-base text-[#D8B4D9]/70 uppercase tracking-widest">
+                Biblioteca de Atividades ESL &bull; Atualização Automática
+            </p>
+        </header>
+
+        <!-- Container da Lista -->
+        <main>
+            <div id="loading" class="text-center py-10 text-[#D8B4D9]/60 italic">
+                Carregando recursos do repositório...
+            </div>
+            <ul id="resource-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Os links gerados automaticamente vão aparecer aqui -->
+            </ul>
+        </main>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="text-center mt-16 text-xs text-[#D8B4D9]/40 tracking-wider">
+        Hosted on GitHub Pages &bull; Clássica Gótica Theme
+    </footer>
+
+    <script>
+        // CONFIGURAÇÃO: Insira aqui os seus dados do GitHub
+        const owner = 'SEU-USUARIO-GITHUB';
+        const repo = 'resource-library';
+        const folderPath = 'resources'; // Nome da pasta onde você colocará os ficheiros
+
+        async function fetchResources() {
+            const listContainer = document.getElementById('resource-list');
+            const loading = document.getElementById('loading');
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${folderPath}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Não foi possível carregar os ficheiros.');
+                
+                const files = await response.json();
+                loading.style.display = 'none';
+
+                files.forEach(file => {
+                    // Filtra apenas arquivos HTML (você pode alterar para aceitar outros se quiser)
+                    if (file.type === 'file' && file.name.endsWith('.html')) {
+                        // Formata o nome do arquivo para o título do card
+                        const cleanName = file.name
+                            .replace('.html', '')
+                            .replace(/-/g, ' ')
+                            .replace(/_/g, ' ')
+                            .replace(/^./, str => str.toUpperCase());
+
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <a href="${file.path}" target="_blank" 
+                               class="group block bg-[#502064]/40 border border-[#6B0F1A] hover:border-[#F48FB1] p-5 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between h-full">
+                                <div>
+                                    <h2 class="font-cinzel text-lg font-bold text-[#D8B4D9] group-hover:text-[#F48FB1] transition mb-2">
+                                        ${cleanName}
+                                    </h2>
+                                    <p class="text-xs text-[#D8B4D9]/60">Clique para abrir a atividade interativa</p>
+                                </div>
+                                <div class="mt-4 flex items-center justify-end text-xs font-semibold text-[#F48FB1] tracking-wider uppercase">
+                                    Acessar &rarr;
+                                </div>
+                            </a>
+                        `;
+                        listContainer.appendChild(li);
+                    }
+                });
+
+                if (listContainer.children.length === 0) {
+                    loading.textContent = 'Nenhum ficheiro encontrado na pasta "resources".';
+                    loading.style.display = 'block';
+                }
+
+            } catch (error) {
+                loading.textContent = 'Erro ao sincronizar com o GitHub. Verifique o nome do repositório no script.';
+                console.error(error);
+            }
+        }
+
+        fetchResources();
+    </script>
+</body>
+</html>
