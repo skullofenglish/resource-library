@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Whiteboard & Notes</title>
+
+    <!-- 🌙 GOTHIC FAVICON -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 🏛️ GOOGLE FONT: Cinzel Decorative -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- 📝 QUILL.JS EDITOR (Rich Text Format) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <style>
+        .font-title {
+            font-family: 'Cinzel Decorative', cursive, serif;
+            letter-spacing: 0.05em;
+        }
+        body {
+            font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+            background-color: #F7F5F8 !important;
+            color: #2D232E;
+        }
+
+        /* Quill Editor Customization for Light Theme */
+        .ql-toolbar.ql-snow {
+            background-color: #EFECEF !important;
+            border-color: #6B3A7E !important;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        .ql-container.ql-snow {
+            background-color: #FFFFFF !important;
+            border-color: #6B3A7E !important;
+            color: #2D232E !important;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+            min-height: 400px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .ql-stroke { stroke: #502064 !important; }
+        .ql-fill { fill: #502064 !important; }
+        .ql-picker { color: #502064 !important; }
+        .ql-picker-options {
+            background-color: #FFFFFF !important;
+            border-color: #6B3A7E !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header style="background-color: #502064;" class="text-white shadow-md border-b border-[#6B3A7E]">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-4">
+                <a href="index.html" style="background-color: #6B0F1A;" class="hover:bg-[#801320] text-white px-3 py-1.5 rounded-lg text-sm font-medium transition border border-[#F48FB1]/30 flex items-center gap-2">
+                    <i class="fa-solid fa-house"></i> Back to Dashboard
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-title tracking-wide text-[#F48FB1] flex items-center gap-2">
+                    Interactive Whiteboard
+                </h1>
+            </div>
+            
+            <div id="sync-status" class="text-xs bg-[#33131A] text-[#F48FB1] px-3 py-1 rounded-full flex items-center gap-1 border border-[#6B3A7E]">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Cloud Synced</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+
+        <!-- BOARDS NAVIGATION BAR & ACTIONS -->
+        <div class="bg-white p-4 rounded-xl shadow-lg border border-[#6B3A7E]/30 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <!-- Tabs / List of Boards -->
+            <div id="boards-tabs" class="flex flex-wrap items-center gap-2 w-full lg:w-auto overflow-x-auto pb-1">
+                <!-- Dynamically loaded tabs -->
+            </div>
+
+            <!-- Board Controls -->
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
+                <button onclick="createNewBoard()" class="px-3 py-2 bg-[#502064] hover:bg-[#6B3A7E] text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> New Board
+                </button>
+                <button onclick="saveCurrentBoard()" class="px-3 py-2 bg-[#6B0F1A] hover:bg-[#801320] text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-1">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Board
+                </button>
+                <button onclick="clearCurrentBoard()" class="px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-xs font-semibold rounded-lg transition flex items-center gap-1">
+                    <i class="fa-solid fa-eraser"></i> Clear Board
+                </button>
+                <button onclick="downloadAsDoc()" class="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1">
+                    <i class="fa-solid fa-file-word"></i> Download .doc
+                </button>
+            </div>
+        </div>
+
+        <!-- WHITEBOARD WORKSPACE -->
+        <div class="bg-white p-5 rounded-xl shadow-xl border border-[#6B3A7E]/40 space-y-4">
+            <!-- Board Title Input & Media Search Toggle -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-neutral-200 pb-3">
+                <div class="w-full sm:w-1/2">
+                    <label class="text-xs text-neutral-500 mb-1 block font-semibold">Board Title</label>
+                    <input type="text" id="board-title-input" oninput="updateActiveBoardTitle(this.value)" placeholder="e.g., Grammar Explanations - Room 3" class="w-full px-3 py-2 bg-neutral-50 border border-[#6B3A7E]/40 text-neutral-800 font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-[#502064]">
+                </div>
+                <div class="w-full sm:w-auto flex justify-end">
+                    <button onclick="toggleMediaLibrary()" class="px-4 py-2 bg-[#F48FB1]/20 hover:bg-[#F48FB1]/40 text-[#502064] text-xs font-bold rounded-lg border border-[#6B3A7E]/30 transition flex items-center gap-2">
+                        <i class="fa-solid fa-images"></i> Insert Image / GIF from Web
+                    </button>
+                </div>
+            </div>
+
+            <!-- COLLAPSIBLE MEDIA LIBRARY (Unsplash & Giphy) -->
+            <div id="media-library-panel" class="hidden bg-[#EFECEF] p-4 rounded-xl border border-[#6B3A7E]/30 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-title text-sm text-[#502064] font-bold"><i class="fa-solid fa-globe"></i> Public Image & GIF Library</h4>
+                    <button onclick="toggleMediaLibrary()" class="text-xs text-neutral-600 hover:text-black"><i class="fa-solid fa-xmark"></i> Close</button>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="media-search-input" placeholder="Search for keywords (e.g., cat, classroom, grammar)..." class="flex-grow px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#502064]">
+                    <button onclick="searchOnlineMedia()" class="px-4 py-2 bg-[#502064] hover:bg-[#6B3A7E] text-white text-xs font-semibold rounded-lg transition">
+                        Search Web
+                    </button>
+                </div>
+                <!-- Results Grid -->
+                <div id="media-results-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-48 overflow-y-auto p-1">
+                    <p class="text-xs text-neutral-500 col-span-full italic">Type a keyword and click search to load public images/GIFs.</p>
+                </div>
+            </div>
+
+            <!-- QUILL EDITOR CONTAINER -->
+            <div>
+                <div id="whiteboard-quill"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Firebase SDKs via CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCk3kW6ae9nceSgvRWJrfm5ka_Kbjor0mk",
+            authDomain: "painelpessoal-ab165.firebaseapp.com",
+            projectId: "painelpessoal-ab165",
+            storageBucket: "painelpessoal-ab165.firebasestorage.app",
+            messagingSenderId: "113043267624",
+            appId: "1:113043267624:web:b2d40daac28c3a55a4951d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Initialize Quill Editor with Full Formatting & Color Pickers
+        const quill = new Quill('#whiteboard-quill', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'image', 'clean']
+                ]
+            },
+            placeholder: 'Start writing, typing notes, or inserting media here...'
+        });
+
+        let boardsList = [];
+        let activeBoardId = null;
+
+        // Toggle Media Library Panel
+        window.toggleMediaLibrary = function() {
+            const panel = document.getElementById('media-library-panel');
+            panel.classList.toggle('hidden');
+        };
+
+        // Search Unsplash Source for public images
+        window.searchOnlineMedia = function() {
+            const queryVal = document.getElementById('media-search-input').value.trim();
+            const resultsGrid = document.getElementById('media-results-grid');
+            if (!queryVal) return;
+
+            resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">Searching web images...</p>`;
+
+            // Using Unsplash Source public random images matching query
+            let htmlContent = '';
+            for (let i = 1; i <= 12; i++) {
+                const imageUrl = `https://source.unsplash.com/featured/300x200/?${encodeURIComponent(queryVal)}&sig=${i}`;
+                htmlContent += `
+                    <div class="cursor-pointer border rounded overflow-hidden hover:opacity-80 transition bg-white" onclick="insertImageToEditor('${imageUrl}')">
+                        <img src="${imageUrl}" class="w-full h-24 object-cover" alt="Web Image" onerror="this.parentElement.style.display='none'">
+                    </div>
+                `;
+            }
+            resultsGrid.innerHTML = htmlContent;
+        };
+
+        window.insertImageToEditor = function(url) {
+            const range = quill.getSelection();
+            const index = range ? range.index : quill.getLength();
+            quill.insertEmbed(index, 'image', url);
+            toggleMediaLibrary();
+        };
+
+        // Firebase Realtime Listener for Whiteboards
+        onSnapshot(query(collection(db, "whiteboards"), orderBy("createdAt", "desc")), (snapshot) => {
+            boardsList = [];
+            snapshot.forEach(docSnap => {
+                boardsList.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            if (boardsList.length === 0) {
+                // Automatically create a default board if none exist
+                addDoc(collection(db, "whiteboards"), {
+                    title: "Default Board",
+                    contentHtml: "<p>Welcome to your interactive whiteboard!</p>",
+                    createdAt: Date.now()
+                });
+            } else {
+                if (!activeBoardId || !boardsList.some(b => b.id === activeBoardId)) {
+                    activeBoardId = boardsList[0].id;
+                }
+                renderBoardsTabs();
+                loadActiveBoardData();
+            }
+        });
+
+        window.renderBoardsTabs = function() {
+            const tabsContainer = document.getElementById('boards-tabs');
+            tabsContainer.innerHTML = '';
+
+            boardsList.forEach(board => {
+                const isActive = board.id === activeBoardId;
+                const tabBtn = document.createElement('div');
+                tabBtn.className = `px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition flex items-center gap-2 ${isActive ? 'bg-[#502064] text-white border-[#502064]' : 'bg-neutral-100 text-neutral-700 border-neutral-300 hover:bg-neutral-200'}`;
+                tabBtn.innerHTML = `
+                    <span onclick="switchBoard('${board.id}')">${board.title || 'Untitled Board'}</span>
+                    ${boardsList.length > 1 ? `<i class="fa-solid fa-xmark hover:text-rose-300 ml-1" onclick="event.stopPropagation(); deleteBoard('${board.id}')"></i>` : ''}
+                `;
+                tabsContainer.appendChild(tabBtn);
+            });
+        };
+
+        window.switchBoard = function(id) {
+            activeBoardId = id;
+            renderBoardsTabs();
+            loadActiveBoardData();
+        };
+
+        function loadActiveBoardData() {
+            const activeBoard = boardsList.find(b => b.id === activeBoardId);
+            if (activeBoard) {
+                document.getElementById('board-title-input').value = activeBoard.title || '';
+                quill.root.innerHTML = activeBoard.contentHtml || '';
+            }
+        }
+
+        window.updateActiveBoardTitle = async function(newTitle) {
+            if (!activeBoardId) return;
+            // Update UI tab text instantly
+            const tabSpan = document.querySelector(`[onclick*="switchBoard('${activeBoardId}')"]`);
+            if (tabSpan) tabSpan.innerText = newTitle || 'Untitled Board';
+        };
+
+        window.createNewBoard = async function() {
+            const docRef = await addDoc(collection(db, "whiteboards"), {
+                title: `Board ${boardsList.length + 1}`,
+                contentHtml: "<p>New whiteboard notes...</p>",
+                createdAt: Date.now()
+            });
+            activeBoardId = docRef.id;
+        };
+
+        window.saveCurrentBoard = async function() {
+            if (!activeBoardId) return;
+            const title = document.getElementById('board-title-input').value || 'Untitled Board';
+            const contentHtml = quill.root.innerHTML;
+
+            try {
+                await updateDoc(doc(db, "whiteboards", activeBoardId), {
+                    title,
+                    contentHtml
+                });
+                alert("Board successfully saved to the cloud!");
+            } catch (err) {
+                console.error("Error saving board:", err);
+                alert("Error saving board.");
+            }
+        };
+
+        window.clearCurrentBoard = function() {
+            if (confirm("Are you sure you want to clear this board's content?")) {
+                quill.setText('');
+            }
+        };
+
+        window.deleteBoard = async function(id) {
+            if (confirm("Are you sure you want to delete this board?")) {
+                await deleteDoc(doc(db, "whiteboards", id));
+            }
+        };
+
+        window.downloadAsDoc = function() {
+            const title = document.getElementById('board-title-input').value || 'Whiteboard';
+            const contentHtml = quill.root.innerHTML;
+
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + `<h2>${title}</h2>` + contentHtml + footer;
+
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+            fileDownload.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.doc`;
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+        };
+    </script>
+</body>
+</html>
