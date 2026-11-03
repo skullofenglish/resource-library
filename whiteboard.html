@@ -129,8 +129,8 @@
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" id="media-search-input" placeholder="Type keyword in English (e.g., cat, school)..." class="flex-grow px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#502064]">
                     <select id="media-type-select" class="px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none">
-                        <option value="photo">Photos</option>
-                        <option value="gif">GIFs</option>
+                        <option value="photo">Photos (Wikimedia)</option>
+                        <option value="gif">GIFs (Tenor Public)</option>
                     </select>
                     <button onclick="searchOnlineMedia()" class="px-4 py-2 bg-[#502064] hover:bg-[#6B3A7E] text-white text-xs font-semibold rounded-lg transition">
                         Find Media
@@ -191,7 +191,7 @@
             panel.classList.toggle('hidden');
         };
 
-        // Real Working Media Search using direct public image & GIF pools
+        // Working Media Search using Wikimedia Commons for photos and Tenor public search for GIFs
         window.searchOnlineMedia = async function() {
             const queryVal = document.getElementById('media-search-input').value.trim().toLowerCase();
             const mediaType = document.getElementById('media-type-select').value;
@@ -201,25 +201,37 @@
             resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">Searching web for "${queryVal}"...</p>`;
             let htmlContent = '';
 
-            if (mediaType === 'photo') {
-                for (let i = 1; i <= 12; i++) {
-                    const imgUrl = `https://picsum.photos/seed/${encodeURIComponent(queryVal)}${i}/400/300`;
-                    htmlContent += `
-                        <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${imgUrl}')">
-                            <img src="${imgUrl}" class="w-full h-24 object-cover" alt="Photo">
-                        </div>
-                    `;
-                }
-                resultsGrid.innerHTML = htmlContent;
-            } else {
-                // Fetch real Giphy public search items
-                try {
-                    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(queryVal)}&limit=12`);
-                    const json = await res.json();
-                    
-                    if (json.data && json.data.length > 0) {
-                        json.data.forEach(item => {
-                            const gifUrl = item.images.fixed_height.url;
+            try {
+                if (mediaType === 'photo') {
+                    // Wikimedia Commons API for real matching images
+                    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(queryVal)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    if (data.query && data.query.pages) {
+                        Object.values(data.query.pages).forEach(page => {
+                            if (page.imageinfo && page.imageinfo[0] && page.imageinfo[0].url) {
+                                const imgUrl = page.imageinfo[0].url;
+                                htmlContent += `
+                                    <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${imgUrl}')">
+                                        <img src="${imgUrl}" class="w-full h-24 object-cover" alt="Photo" onerror="this.parentElement.style.display='none'">
+                                    </div>
+                                `;
+                            }
+                        });
+                        resultsGrid.innerHTML = htmlContent || `<p class="text-xs text-neutral-500 col-span-full italic">No photos found. Try another English keyword.</p>`;
+                    } else {
+                        resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No photos found.</p>`;
+                    }
+                } else {
+                    // Tenor Public Anonymous Search API for real working GIFs
+                    const tenorUrl = `https://g.tenor.com/v1/search?q=${encodeURIComponent(queryVal)}&key=LIVDSRZULELA&limit=12`;
+                    const res = await fetch(tenorUrl);
+                    const data = await res.json();
+
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(item => {
+                            const gifUrl = item.media[0].gif.url;
                             htmlContent += `
                                 <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${gifUrl}')">
                                     <img src="${gifUrl}" class="w-full h-24 object-cover" alt="GIF">
@@ -230,9 +242,10 @@
                     } else {
                         resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No GIFs found. Try another keyword.</p>`;
                     }
-                } catch(e) {
-                    resultsGrid.innerHTML = `<p class="text-xs text-rose-500 col-span-full italic">Error loading GIFs. Try again.</p>`;
                 }
+            } catch (err) {
+                console.error("Error fetching media:", err);
+                resultsGrid.innerHTML = `<p class="text-xs text-rose-500 col-span-full italic">Error loading media. Please try again.</p>`;
             }
         };
 
@@ -311,7 +324,7 @@
         };
 
         window.saveCurrentBoard = async function() {
-            if (-!activeBoardId) return;
+            if (!activeBoardId) return;
             const title = document.getElementById('board-title-input').value || 'Untitled Board';
             const contentHtml = quill.root.innerHTML;
 
