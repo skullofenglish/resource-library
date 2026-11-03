@@ -191,13 +191,14 @@
             panel.classList.toggle('hidden');
         };
 
-        window.searchOnlineMedia = function() {
+        // Real Working Media Search using direct public image & GIF pools
+        window.searchOnlineMedia = async function() {
             const queryVal = document.getElementById('media-search-input').value.trim().toLowerCase();
             const mediaType = document.getElementById('media-type-select').value;
             const resultsGrid = document.getElementById('media-results-grid');
             if (!queryVal) return;
 
-            resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">Loading media...</p>`;
+            resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">Searching web for "${queryVal}"...</p>`;
             let htmlContent = '';
 
             if (mediaType === 'photo') {
@@ -209,18 +210,30 @@
                         </div>
                     `;
                 }
+                resultsGrid.innerHTML = htmlContent;
             } else {
-                for (let i = 1; i <= 12; i++) {
-                    const gifUrl = `https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif`;
-                    htmlContent += `
-                        <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('https://media.giphy.com/media/l4FGpP4lxv5VjABc4/giphy.gif')">
-                            <div class="w-full h-24 bg-purple-900 text-white flex items-center justify-center text-xs font-bold p-1 text-center">GIF: ${queryVal} #${i}</div>
-                        </div>
-                    `;
+                // Fetch real Giphy public search items
+                try {
+                    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(queryVal)}&limit=12`);
+                    const json = await res.json();
+                    
+                    if (json.data && json.data.length > 0) {
+                        json.data.forEach(item => {
+                            const gifUrl = item.images.fixed_height.url;
+                            htmlContent += `
+                                <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${gifUrl}')">
+                                    <img src="${gifUrl}" class="w-full h-24 object-cover" alt="GIF">
+                                </div>
+                            `;
+                        });
+                        resultsGrid.innerHTML = htmlContent;
+                    } else {
+                        resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No GIFs found. Try another keyword.</p>`;
+                    }
+                } catch(e) {
+                    resultsGrid.innerHTML = `<p class="text-xs text-rose-500 col-span-full italic">Error loading GIFs. Try again.</p>`;
                 }
             }
-
-            resultsGrid.innerHTML = htmlContent;
         };
 
         window.insertImageToEditor = function(url) {
@@ -298,7 +311,7 @@
         };
 
         window.saveCurrentBoard = async function() {
-            if (!activeBoardId) return;
+            if (-!activeBoardId) return;
             const title = document.getElementById('board-title-input').value || 'Untitled Board';
             const contentHtml = quill.root.innerHTML;
 
