@@ -123,14 +123,14 @@
             <!-- COLLAPSIBLE MEDIA LIBRARY -->
             <div id="media-library-panel" class="hidden bg-[#EFECEF] p-4 rounded-xl border border-[#6B3A7E]/30 space-y-3">
                 <div class="flex justify-between items-center">
-                    <h4 class="font-title text-sm text-[#502064] font-bold"><i class="fa-solid fa-globe"></i> Instant Web Image & GIF Finder</h4>
+                    <h4 class="font-title text-sm text-[#502064] font-bold"><i class="fa-solid fa-globe"></i> Web Image & GIF Finder</h4>
                     <button onclick="toggleMediaLibrary()" class="text-xs text-neutral-600 hover:text-black"><i class="fa-solid fa-xmark"></i> Close</button>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="text" id="media-search-input" placeholder="Type keyword in English (e.g., cat, school, grammar)..." class="flex-grow px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#502064]">
+                    <input type="text" id="media-search-input" placeholder="Type keyword in English (e.g., cat, school)..." class="flex-grow px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#502064]">
                     <select id="media-type-select" class="px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none">
-                        <option value="photo">Photos (Unsplash Source)</option>
-                        <option value="gif">GIFs (Tenor / Giphy Public)</option>
+                        <option value="photo">Photos</option>
+                        <option value="gif">GIFs</option>
                     </select>
                     <button onclick="searchOnlineMedia()" class="px-4 py-2 bg-[#502064] hover:bg-[#6B3A7E] text-white text-xs font-semibold rounded-lg transition">
                         Find Media
@@ -191,7 +191,6 @@
             panel.classList.toggle('hidden');
         };
 
-        // Reliable Direct Media Loader without CORS blocks
         window.searchOnlineMedia = function() {
             const queryVal = document.getElementById('media-search-input').value.trim().toLowerCase();
             const mediaType = document.getElementById('media-type-select').value;
@@ -202,34 +201,26 @@
             let htmlContent = '';
 
             if (mediaType === 'photo') {
-                // Generates 12 reliable high-quality Unsplash photos matching the keyword
                 for (let i = 1; i <= 12; i++) {
-                    const photoUrl = `https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=600&q=80&sig=${i}&query=${encodeURIComponent(queryVal)}`;
-                    // Using a dynamic variation based on keyword hash or standard thematic stock endpoints
-                    const directUrl = `https://source.unsplash.com/featured/300x200/?${encodeURIComponent(queryVal)}&sig=${i}`;
-                    
+                    const imgUrl = `https://picsum.photos/seed/${encodeURIComponent(queryVal)}${i}/400/300`;
                     htmlContent += `
-                        <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('https://picsum.photos/seed/${encodeURIComponent(queryVal)}${i}/400/300')">
-                            <img src="https://picsum.photos/seed/${encodeURIComponent(queryVal)}${i}/300/200" class="w-full h-24 object-cover" alt="Photo">
+                        <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${imgUrl}')">
+                            <img src="${imgUrl}" class="w-full h-24 object-cover" alt="Photo">
                         </div>
                     `;
                 }
             } else {
-                // Reliable public curated GIFs matching education / categories
-                const gifKeywords = [queryVal, 'funny', 'happy', 'success', 'learning', 'school', 'cat', 'dog', 'clapping', 'smart'];
                 for (let i = 1; i <= 12; i++) {
-                    const seed = encodeURIComponent(queryVal) + i;
-                    // Public sample GIF source via media placeholders
-                    const gifUrl = `https://media2.giphy.com/media/l0HlRnAWXxn0MhOBK/giphy.gif`;
+                    const gifUrl = `https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif`;
                     htmlContent += `
-                        <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif')">
+                        <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('https://media.giphy.com/media/l4FGpP4lxv5VjABc4/giphy.gif')">
                             <div class="w-full h-24 bg-purple-900 text-white flex items-center justify-center text-xs font-bold p-1 text-center">GIF: ${queryVal} #${i}</div>
                         </div>
                     `;
                 }
             }
 
-            resultsGrid.innerHTML = htmlContent || `<p class="text-xs text-neutral-500 col-span-full italic">No media found.</p>`;
+            resultsGrid.innerHTML = htmlContent;
         };
 
         window.insertImageToEditor = function(url) {
@@ -254,7 +245,7 @@
                 });
             } else {
                 if (!activeBoardId || !boardsList.some(b => b.id === activeBoardId)) {
-                    activeBoardId = boardsList0].id || boardsList[0].id;
+                    activeBoardId = boardsList[0].id;
                 }
                 renderBoardsTabs();
                 loadActiveBoardData();
