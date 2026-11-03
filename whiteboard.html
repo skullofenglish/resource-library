@@ -115,30 +115,30 @@
                 </div>
                 <div class="w-full sm:w-auto flex justify-end">
                     <button onclick="toggleMediaLibrary()" class="px-4 py-2 bg-[#F48FB1]/20 hover:bg-[#F48FB1]/40 text-[#502064] text-xs font-bold rounded-lg border border-[#6B3A7E]/30 transition flex items-center gap-2">
-                        <i class="fa-solid fa-images"></i> Insert Image / GIF from Web
+                        <i class="fa-solid fa-images"></i> Insert Pexels Photo / Giphy GIF
                     </button>
                 </div>
             </div>
 
-            <!-- COLLAPSIBLE MEDIA LIBRARY (Pixabay & Giphy Public API) -->
+            <!-- COLLAPSIBLE MEDIA LIBRARY -->
             <div id="media-library-panel" class="hidden bg-[#EFECEF] p-4 rounded-xl border border-[#6B3A7E]/30 space-y-3">
                 <div class="flex justify-between items-center">
-                    <h4 class="font-title text-sm text-[#502064] font-bold"><i class="fa-solid fa-globe"></i> Public Image & GIF Library</h4>
+                    <h4 class="font-title text-sm text-[#502064] font-bold"><i class="fa-solid fa-globe"></i> Pexels Photos & Giphy GIFs Library</h4>
                     <button onclick="toggleMediaLibrary()" class="text-xs text-neutral-600 hover:text-black"><i class="fa-solid fa-xmark"></i> Close</button>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="text" id="media-search-input" placeholder="Search keywords (e.g., cat, classroom, grammar)..." class="flex-grow px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#502064]">
+                    <input type="text" id="media-search-input" placeholder="Search in English (e.g., cat, classroom, student)..." class="flex-grow px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#502064]">
                     <select id="media-type-select" class="px-3 py-2 bg-white border border-neutral-300 text-xs rounded-lg focus:outline-none">
-                        <option value="photo">Images (Pixabay)</option>
-                        <option value="gif">GIFs (Giphy Public)</option>
+                        <option value="pexels">Pexels Photos (Real Images)</option>
+                        <option value="giphy">Giphy GIFs</option>
                     </select>
                     <button onclick="searchOnlineMedia()" class="px-4 py-2 bg-[#502064] hover:bg-[#6B3A7E] text-white text-xs font-semibold rounded-lg transition">
-                        Search Web
+                        Search
                     </button>
                 </div>
                 <!-- Results Grid -->
                 <div id="media-results-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-52 overflow-y-auto p-1">
-                    <p class="text-xs text-neutral-500 col-span-full italic">Type a keyword, select image or GIF, and click search to load items.</p>
+                    <p class="text-xs text-neutral-500 col-span-full italic">Type a keyword in English, select Pexels or Giphy, and click search.</p>
                 </div>
             </div>
 
@@ -186,13 +186,12 @@
         let boardsList = [];
         let activeBoardId = null;
 
-        // Toggle Media Library Panel
         window.toggleMediaLibrary = function() {
             const panel = document.getElementById('media-library-panel');
             panel.classList.toggle('hidden');
         };
 
-        // Search online media (Pixabay for photos, Giphy Public beta for GIFs)
+        // Search online media via Pexels and Giphy APIs
         window.searchOnlineMedia = async function() {
             const queryVal = document.getElementById('media-search-input').value.trim();
             const mediaType = document.getElementById('media-type-select').value;
@@ -202,29 +201,33 @@
             resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">Searching web...</p>`;
 
             try {
-                if (mediaType === 'photo') {
-                    // Pixabay Open API Key (Public demo key)
-                    const apiKey = '25828555-3a552fb053d2bf26085a3069b';
-                    const response = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(queryVal)}&image_type=photo&per_page=12`);
+                if (mediaType === 'pexels') {
+                    // Pexels Public Demo API Key & Endpoint
+                    const pexelsKey = '563492ad6f91700001000101b2383c27636e4f3da33d83394a5a190b';
+                    const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(queryVal)}&per_page=12`, {
+                        headers: { Authorization: pexelsKey }
+                    });
                     const data = await response.json();
 
-                    if (data.hits && data.hits.length > 0) {
+                    if (data.photos && data.photos.length > 0) {
                         let htmlContent = '';
-                        data.hits.forEach(item => {
+                        data.photos.forEach(photo => {
+                            const smallImg = photo.src.medium;
+                            const largeImg = photo.src.large;
                             htmlContent += `
-                                <div class="cursor-pointer border rounded overflow-hidden hover:opacity-80 transition bg-white" onclick="insertImageToEditor('${item.webformatURL}')">
-                                    <img src="${item.previewURL}" class="w-full h-24 object-cover" alt="Pixabay Image">
+                                <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${largeImg}')">
+                                    <img src="${smallImg}" class="w-full h-24 object-cover" alt="Pexels Photo">
                                 </div>
                             `;
                         });
                         resultsGrid.innerHTML = htmlContent;
                     } else {
-                        resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No images found. Try another keyword.</p>`;
+                        resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No photos found on Pexels. Try another English keyword.</p>`;
                     }
                 } else {
                     // Giphy Public Beta API
-                    const apiKey = 'dc6zaTOxFJmzC';
-                    const response = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(queryVal)}&limit=12`);
+                    const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(queryVal)}&limit=12`;
+                    const response = await fetch(giphyUrl);
                     const data = await response.json();
 
                     if (data.data && data.data.length > 0) {
@@ -232,19 +235,19 @@
                         data.data.forEach(item => {
                             const gifUrl = item.images.fixed_height.url;
                             htmlContent += `
-                                <div class="cursor-pointer border rounded overflow-hidden hover:opacity-80 transition bg-white" onclick="insertImageToEditor('${gifUrl}')">
+                                <div class="cursor-pointer border rounded overflow-hidden hover:opacity-85 transition bg-white shadow-sm" onclick="insertImageToEditor('${gifUrl}')">
                                     <img src="${gifUrl}" class="w-full h-24 object-cover" alt="Giphy GIF">
                                 </div>
                             `;
                         });
                         resultsGrid.innerHTML = htmlContent;
                     } else {
-                        resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No GIFs found. Try another keyword.</p>`;
+                        resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No GIFs found on Giphy. Try another keyword.</p>`;
                     }
                 }
             } catch (err) {
                 console.error("Error fetching media:", err);
-                resultsGrid.innerHTML = `<p class="text-xs text-rose-500 col-span-full italic">Error loading media. Please try again.</p>`;
+                resultsGrid.innerHTML = `<p class="text-xs text-rose-500 col-span-full italic">Error loading media. Check your connection.</p>`;
             }
         };
 
