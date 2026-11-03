@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESL Phonetic Alphabet & Converter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts: Cinzel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        body {
+            font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+            background-color: #F8F5F9; /* Fundo claro elegante */
+            color: #1A1A1A;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-6 md:p-10">
+
+    <div class="max-w-5xl mx-auto w-full">
+        <!-- Cabeçalho -->
+        <header class="flex flex-col md:flex-row items-center justify-between border-b border-[#502064]/20 pb-6 mb-8 gap-4">
+            <div>
+                <a href="index.html" class="text-xs uppercase tracking-widest text-[#502064] font-bold hover:underline mb-1 inline-block">&larr; Voltar para a Biblioteca</a>
+                <h1 class="font-cinzel text-3xl md:text-4xl font-bold tracking-wider text-[#502064]">
+                    Interactive Phonetic Chart
+                </h1>
+            </div>
+            <!-- Seletor de Sotaque (US / UK) -->
+            <div class="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-[#502064]/20">
+                <span class="text-xs font-bold uppercase tracking-wider px-2 text-[#502064]">Accent:</span>
+                <button id="btn-us" onclick="setAccent('us')" class="px-4 py-2 rounded-lg text-sm font-bold transition bg-[#502064] text-white shadow">
+                    🇺🇸 American (US)
+                </button>
+                <button id="btn-uk" onclick="setAccent('uk')" class="px-4 py-2 rounded-lg text-sm font-bold transition text-[#502064] hover:bg-purple-50">
+                    🇬🇧 British (UK)
+                </button>
+            </div>
+        </header>
+
+        <!-- Seção do Conversor de Texto -->
+        <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10 mb-10">
+            <h2 class="font-cinzel text-xl font-bold text-[#502064] mb-3">Conversor de Palavras & Pronúncia</h2>
+            <p class="text-sm text-gray-600 mb-4">Digite uma palavra ou frase para escutar a pronúncia completa no sotaque selecionado:</p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="word-input" placeholder="Ex: comfortable, psychology..." 
+                       class="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-[#502064] text-lg font-medium">
+                <button onclick="speakInputText()" class="bg-[#6B0F1A] hover:bg-[#502064] text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow">
+                    🔊 Ouvir Palavra
+                </button>
+            </div>
+        </section>
+
+        <!-- Chart de Fonemas Interativo -->
+        <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10">
+            <div class="mb-6">
+                <h2 class="font-cinzel text-xl font-bold text-[#502064]">Tabela de Fonemas IPA</h2>
+                <p class="text-xs text-gray-500 mt-1">Clique em qualquer fonema para ouvir o áudio nativo correspondente da sua pasta.</p>
+            </div>
+
+            <!-- Grid de Fonemas -->
+            <div id="phoneme-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                <!-- Os cards dos fonemas serão gerados aqui dinamicamente pelo JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="text-center mt-16 text-xs text-gray-500 tracking-wider">
+        ESL Phonetics Tool &bull; Clássica Gótica Light Theme
+    </footer>
+
+    <script>
+        let currentAccent = 'us';
+
+        // Mapeamento completo baseado exato nos arquivos que você subiu na pasta audio/
+        const phonemesData = [
+            { symbol: 'iː', label: 'sheep', file: 'sheep_2023feb' },
+            { symbol: 'ɪ', label: 'ship', file: 'ship_2023feb' },
+            { symbol: 'e', label: 'pen', file: 'pen_2023feb' },
+            { symbol: 'æ', label: 'cat / hat', file: 'cat_2023feb' }, // suporta cat ou hat
+            { symbol: 'ʌ', label: 'cup', file: 'cup_2023feb' },
+            { symbol: 'ɑː', label: 'father', file: 'father_2023feb' },
+            { symbol: 'ɒ / ɔ', label: 'sock / horse', file: 'horse_2023feb' },
+            { symbol: 'ʊ', label: 'book / foot', file: 'book_2023feb' },
+            { symbol: 'uː', label: 'blue / moon', file: 'blue_2023feb' },
+            { symbol: 'ə', label: 'above', file: 'above_2023feb' },
+            { symbol: 'ɜː', label: 'bird', file: 'bird_2023feb' },
+            { symbol: 'eɪ', label: 'day', file: 'day_2023feb_001' },
+            { symbol: 'aɪ', label: 'eye', file: 'eye_2023feb' },
+            { symbol: 'ɔɪ', label: 'boy', file: 'boy_2023feb' },
+            { symbol: 'aʊ', label: 'mouth', file: 'mouth_2023feb' },
+            { symbol: 'əʊ / oʊ', label: 'nose / town', file: 'nose_2023feb' },
+            { symbol: 'p', label: 'pen', file: 'pen_2023feb' },
+            { symbol: 'b', label: 'boy', file: 'boy_2023feb' },
+            { symbol: 't', label: 'two', file: 'think_2023feb' },
+            { symbol: 'd', label: 'day', file: 'day_2023feb_001' },
+            { symbol: 'tʃ', label: 'cheese', file: 'cheese_2023feb' },
+            { symbol: 'dʒ', label: 'jump', file: 'jump_2023feb' },
+            { symbol: 'k', label: 'cat', file: 'cat_2023feb' },
+            { symbol: 'g', label: 'give', file: 'give_2023feb' },
+            { symbol: 'f', label: 'fish', file: 'fish_2023feb' },
+            { symbol: 'v', label: 'very', file: 'very_2023feb' },
+            { symbol: 'θ', label: 'think', file: 'think_2023feb' },
+            { symbol: 'ð', label: 'this', file: 'this_2023feb' },
+            { symbol: 's', label: 'say', file: 'say_2023feb' },
+            { symbol: 'z', label: 'zoo', file: 'zoo_2023feb' },
+            { symbol: 'ʃ', label: 'she', file: 'she_2023feb' },
+            { symbol: 'ʒ', label: 'vision', file: 'vision_2023feb' },
+            { symbol: 'm', label: 'name', file: 'name_2023feb' },
+            { symbol: 'n', label: 'nose', file: 'nose_2023feb' },
+            { symbol: 'ŋ', label: 'sing', file: 'sing_2023feb' },
+            { symbol: 'h', label: 'hat', file: 'hat_2023feb' },
+            { symbol: 'l', label: 'label', file: 'label_2023feb' },
+            { symbol: 'r', label: 'run', file: 'run_2023feb' },
+            { symbol: 'j', label: 'yes', file: 'yes_2023feb' },
+            { symbol: 'w', label: 'we', file: 'we_2023feb' }
+        ];
+
+        function setAccent(accent) {
+            currentAccent = accent;
+            const btnUs = document.getElementById('btn-us');
+            const btnUk = document.getElementById('btn-uk');
+
+            if (accent === 'us') {
+                btnUs.className = "px-4 py-2 rounded-lg text-sm font-bold transition bg-[#502064] text-white shadow";
+                btnUk.className = "px-4 py-2 rounded-lg text-sm font-bold transition text-[#502064] hover:bg-purple-50";
+            } else {
+                btnUk.className = "px-4 py-2 rounded-lg text-sm font-bold transition bg-[#502064] text-white shadow";
+                btnUs.className = "px-4 py-2 rounded-lg text-sm font-bold transition text-[#502064] hover:bg-purple-50";
+            }
+        }
+
+        function playPhoneme(fileKey) {
+            // Monta o nome exato do arquivo baseado no prefixo do sotaque escolhido
+            const fileName = `${currentAccent}_phonetics_sound_${fileKey}.mp3`;
+            const audioPath = `audio/${fileName}`;
+            
+            const audio = new Audio(audioPath);
+            audio.play().catch(error => {
+                console.warn("Áudio não encontrado ou erro ao reproduzir:", audioPath);
+                alert(`Arquivo de áudio não localizado na pasta: ${fileName}`);
+            });
+        }
+
+        function speakInputText() {
+            const text = document.getElementById('word-input').value.trim();
+            if (!text) return;
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = currentAccent === 'uk' ? 'en-GB' : 'en-US';
+                utterance.rate = 0.9; // Levemente mais lento para auxílio em sala de aula
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Seu navegador não suporta síntese de fala.");
+            }
+        }
+
+        function renderChart() {
+            const grid = document.getElementById('phoneme-grid');
+            grid.innerHTML = '';
+
+            phonemesData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-[#F8F5F9] border border-[#502064]/20 hover:border-[#502064] hover:shadow-md p-4 rounded-xl text-center cursor-pointer transition flex flex-col items-center justify-center group";
+                card.onclick = () => playPhoneme(item.file);
+                card.innerHTML = `
+                    <span class="text-2xl font-bold text-[#502064] group-hover:scale-110 transition-transform">${item.symbol}</span>
+                    <span class="text-xs text-gray-500 mt-1 uppercase tracking-wider">${item.label}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Renderiza a tabela ao carregar a página
+        renderChart();
+    </script>
+</body>
+</html>
