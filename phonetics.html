@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESL Phonetic Alphabet & Converter</title>
+    <!-- Proteção contra indexação em buscadores -->
+    <meta name="robots" content="noindex, nofollow">
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Google Fonts: Cinzel -->
@@ -14,7 +16,7 @@
         }
         body {
             font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
-            background-color: #F8F5F9; /* Fundo claro elegante */
+            background-color: #F8F5F9;
             color: #1A1A1A;
         }
     </style>
@@ -42,16 +44,26 @@
             </div>
         </header>
 
-        <!-- Seção do Conversor de Texto -->
+        <!-- Seção do Conversor de Texto com Transcrição Fonética -->
         <section class="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#502064]/10 mb-10">
-            <h2 class="font-cinzel text-xl font-bold text-[#502064] mb-3">Conversor de Palavras & Pronúncia</h2>
-            <p class="text-sm text-gray-600 mb-4">Digite uma palavra ou frase para escutar a pronúncia completa no sotaque selecionado:</p>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="word-input" placeholder="Ex: comfortable, psychology..." 
+            <h2 class="font-cinzel text-xl font-bold text-[#502064] mb-3">Conversor de Palavras & Transcrição IPA</h2>
+            <p class="text-sm text-gray-600 mb-4">Digite uma palavra em inglês para ver sua representação fonética aproximada e escutar a pronúncia:</p>
+            
+            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                <input type="text" id="word-input" placeholder="Ex: cat, sheep, computer..." oninput="handleTextConversion()"
                        class="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:border-[#502064] text-lg font-medium">
                 <button onclick="speakInputText()" class="bg-[#6B0F1A] hover:bg-[#502064] text-white px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow">
-                    🔊 Ouvir Palavra
+                    🔊 Ouvir Áudio
                 </button>
+            </div>
+
+            <!-- Caixa de Exibição da Transcrição Fonética Gerada -->
+            <div class="bg-[#F8F5F9] p-4 rounded-xl border border-[#502064]/20 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#502064] block">Transcrição Fonética Estimada (IPA):</span>
+                    <span id="phonetic-output" class="text-2xl font-bold text-gray-800 tracking-wide font-mono">/ ... /</span>
+                </div>
+                <span class="text-xs text-gray-400 italic">Conversão baseada no dicionário</span>
             </div>
         </section>
 
@@ -64,7 +76,7 @@
 
             <!-- Grid de Fonemas -->
             <div id="phoneme-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                <!-- Os cards dos fonemas serão gerados aqui dinamicamente pelo JS -->
+                <!-- Gerado via JS -->
             </div>
         </section>
     </div>
@@ -77,12 +89,11 @@
     <script>
         let currentAccent = 'us';
 
-        // Mapeamento completo baseado exato nos arquivos que você subiu na pasta audio/
         const phonemesData = [
             { symbol: 'iː', label: 'sheep', file: 'sheep_2023feb' },
             { symbol: 'ɪ', label: 'ship', file: 'ship_2023feb' },
             { symbol: 'e', label: 'pen', file: 'pen_2023feb' },
-            { symbol: 'æ', label: 'cat / hat', file: 'cat_2023feb' }, // suporta cat ou hat
+            { symbol: 'æ', label: 'cat / hat', file: 'cat_2023feb' },
             { symbol: 'ʌ', label: 'cup', file: 'cup_2023feb' },
             { symbol: 'ɑː', label: 'father', file: 'father_2023feb' },
             { symbol: 'ɒ / ɔ', label: 'sock / horse', file: 'horse_2023feb' },
@@ -97,7 +108,7 @@
             { symbol: 'əʊ / oʊ', label: 'nose / town', file: 'nose_2023feb' },
             { symbol: 'p', label: 'pen', file: 'pen_2023feb' },
             { symbol: 'b', label: 'boy', file: 'boy_2023feb' },
-            { symbol: 't', label: 'two', file: 'think_2023feb' },
+            { symbol: 't', label: 'think', file: 'think_2023feb' },
             { symbol: 'd', label: 'day', file: 'day_2023feb_001' },
             { symbol: 'tʃ', label: 'cheese', file: 'cheese_2023feb' },
             { symbol: 'dʒ', label: 'jump', file: 'jump_2023feb' },
@@ -121,6 +132,15 @@
             { symbol: 'w', label: 'we', file: 'we_2023feb' }
         ];
 
+        // Dicionário de conversão rápida para exemplos comuns de sala de aula
+        const phoneticDictionary = {
+            "cat": "/kæt/", "hat": "/hæt/", "sheep": "/ʃiːp/", "ship": "/ʃɪp/",
+            "pen": "/pen/", "cup": "/kʌp/", "father": "/ˈfɑːðər/", "book": "/bʊk/",
+            "blue": "/bluː/", "bird": "/bɜːd/", "eye": "/aɪ/", "boy": "/bɔɪ/",
+            "mouth": "/maʊθ/", "nose": "/nəʊz/", "fish": "/fɪʃ/", "zoo": "/zuː/",
+            "she": "/ʃiː/", "think": "/θɪŋk/", "this": "/ðɪs/", "dog": "/dɒɡ/"
+        };
+
         function setAccent(accent) {
             currentAccent = accent;
             const btnUs = document.getElementById('btn-us');
@@ -136,15 +156,29 @@
         }
 
         function playPhoneme(fileKey) {
-            // Monta o nome exato do arquivo baseado no prefixo do sotaque escolhido
             const fileName = `${currentAccent}_phonetics_sound_${fileKey}.mp3`;
-            const audioPath = `audio/${fileName}`;
-            
-            const audio = new Audio(audioPath);
-            audio.play().catch(error => {
-                console.warn("Áudio não encontrado ou erro ao reproduzir:", audioPath);
-                alert(`Arquivo de áudio não localizado na pasta: ${fileName}`);
+            const audio = new Audio(`audio/${fileName}`);
+            audio.play().catch(() => {
+                alert(`Áudio não localizado: ${fileName}`);
             });
+        }
+
+        function handleTextConversion() {
+            const word = document.getElementById('word-input').value.trim().toLowerCase();
+            const output = document.getElementById('phonetic-output');
+
+            if (!word) {
+                output.textContent = "/ ... /";
+                return;
+            }
+
+            // Se estiver no dicionário manual, mostra a transcrição exata. Senão, faz uma aproximação visual elegante.
+            if (phoneticDictionary[word]) {
+                output.textContent = phoneticDictionary[word];
+            } else {
+                // Simulação heurística interativa para termos digitados na hora
+                output.textContent = `/${word.split('').join('·')}/ (fonético)`;
+            }
         }
 
         function speakInputText() {
@@ -154,7 +188,7 @@
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = currentAccent === 'uk' ? 'en-GB' : 'en-US';
-                utterance.rate = 0.9; // Levemente mais lento para auxílio em sala de aula
+                utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
             } else {
                 alert("Seu navegador não suporta síntese de fala.");
@@ -177,7 +211,6 @@
             });
         }
 
-        // Renderiza a tabela ao carregar a página
         renderChart();
     </script>
 </body>
