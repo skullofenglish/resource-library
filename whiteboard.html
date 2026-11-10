@@ -55,6 +55,12 @@
             background-color: #FFFFFF !important;
             border-color: #6B3A7E !important;
         }
+        .ql-editor img {
+            max-width: 400px;
+            height: auto;
+            border-radius: 6px;
+            margin: 5px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -195,18 +201,45 @@
             panel.classList.toggle('hidden');
         };
 
-        // Helper function to insert image files into Quill editor sequentially
+        // Helper function to compress and resize image before inserting (prevents Firestore storage limit errors)
+        function resizeAndProcessImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const maxWidth = 800; // Max width limit for efficient saving
+
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compress to JPEG with 0.8 quality
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    callback(dataUrl);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function processAndInsertFiles(files) {
             const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
             imageFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                resizeAndProcessImage(file, function(optimizedUrl) {
                     const range = quill.getSelection() || { index: quill.getLength() };
-                    quill.insertEmbed(range.index, 'image', e.target.result);
+                    quill.insertEmbed(range.index, 'image', optimizedUrl);
                     quill.insertText(range.index + 1, '\n');
                     quill.setSelection(range.index + 2);
-                };
-                reader.readAsDataURL(file);
+                });
             });
         }
 
@@ -215,7 +248,7 @@
             if (event.target.files && event.target.files.length > 0) {
                 processAndInsertFiles(event.target.files);
             }
-            event.target.value = ''; // Reset input to allow re-uploading same files if needed
+            event.target.value = ''; 
         };
 
         // Handle Drag and Drop Multiple Images directly into Quill Editor area
@@ -246,7 +279,6 @@
 
             try {
                 if (mediaType === 'photo') {
-                    // Wikimedia Commons API for real matching images
                     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(queryVal)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`;
                     const res = await fetch(url);
                     const data = await res.json();
@@ -267,7 +299,6 @@
                         resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No photos found.</p>`;
                     }
                 } else {
-                    // Tenor Public Anonymous Search API for real working GIFs
                     const tenorUrl = `https://g.tenor.com/v1/search?q=${encodeURIComponent(queryVal)}&key=LIVDSRZULELA&limit=12`;
                     const res = await fetch(tenorUrl);
                     const data = await res.json();
@@ -299,25 +330,35 @@
             toggleMediaLibrary();
         };
 
+        let isInitialLoad = true;
+
         // Firebase Realtime Listener for Whiteboards
         onSnapshot(query(collection(db, "whiteboards"), orderBy("createdAt", "desc")), (snapshot) => {
-            boardsList = [];
+            const newBoardsList = [];
             snapshot.forEach(docSnap => {
-                boardsList.push({ id: docSnap.id, ...docSnap.data() });
+                newBoardsList.push({ id: docSnap.id, ...docSnap.data() });
             });
 
-            if (boardsList.length === 0) {
+            if (newBoardsList.length === 0) {
                 addDoc(collection(db, "whiteboards"), {
                     title: "Default Board",
                     contentHtml: "<p>Welcome to your interactive whiteboard!</p>",
                     createdAt: Date.now()
                 });
-            } else {
-                if (!activeBoardId || !boardsList.some(b => b.id === activeBoardId)) {
-                    activeBoardId = boardsList[0].id;
-                }
-                renderBoardsTabs();
+                return;
+            }
+
+            boardsList = newBoardsList;
+
+            if (!activeBoardId || !boardsList.some(b => b.id === activeBoardId)) {
+                activeBoardId = boardsList[0].id;
+            }
+
+            renderBoardsTabs();
+
+            if (isInitialLoad) {
                 loadActiveBoardData();
+                isInitialLoad = false;
             }
         });
 
@@ -347,7 +388,10 @@
             const activeBoard = boardsList.find(b => b.id === activeBoardId);
             if (activeBoard) {
                 document.getElementById('board-title-input').value = activeBoard.title || '';
-                quill.root.innerHTML = activeBoard.contentHtml || '';
+                const currentHtml = quill.root.innerHTML;
+                if (currentHtml !== (activeBoard.contentHtml || '')) {
+                    quill.root.innerHTML = activeBoard.contentHtml || '';
+                }
             }
         }
 
@@ -379,7 +423,7 @@
                 alert("Board successfully saved to the cloud!");
             } catch (err) {
                 console.error("Error saving board:", err);
-                alert("Error saving board.");
+                alert("Error saving board. The images might still be too heavy or large. Try uploading fewer or smaller images.");
             }
         };
 
