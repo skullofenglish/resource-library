@@ -113,7 +113,11 @@
                     <label class="text-xs text-neutral-500 mb-1 block font-semibold">Board Title</label>
                     <input type="text" id="board-title-input" oninput="updateActiveBoardTitle(this.value)" placeholder="e.g., Grammar Explanations - Room 3" class="w-full px-3 py-2 bg-neutral-50 border border-[#6B3A7E]/40 text-neutral-800 font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-[#502064]">
                 </div>
-                <div class="w-full sm:w-auto flex justify-end">
+                <div class="w-full sm:w-auto flex justify-end gap-2">
+                    <label class="px-4 py-2 bg-[#502064]/10 hover:bg-[#502064]/20 text-[#502064] text-xs font-bold rounded-lg border border-[#6B3A7E]/30 transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-upload"></i> Upload Image
+                        <input type="file" id="local-image-upload" accept="image/*" class="hidden" onchange="handleLocalImageUpload(event)">
+                    </label>
                     <button onclick="toggleMediaLibrary()" class="px-4 py-2 bg-[#F48FB1]/20 hover:bg-[#F48FB1]/40 text-[#502064] text-xs font-bold rounded-lg border border-[#6B3A7E]/30 transition flex items-center gap-2">
                         <i class="fa-solid fa-images"></i> Insert Web Image / GIF
                     </button>
@@ -190,6 +194,41 @@
             const panel = document.getElementById('media-library-panel');
             panel.classList.toggle('hidden');
         };
+
+        // Handle Local Image Upload via Device Button
+        window.handleLocalImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const range = quill.getSelection();
+                const index = range ? range.index : quill.getLength();
+                quill.insertEmbed(index, 'image', e.target.result);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = ''; // Reset input
+        };
+
+        // Handle Drag and Drop Images directly into Quill Editor
+        quill.root.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                Array.from(e.dataTransfer.files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const range = quill.getSelection() || { index: quill.getLength() };
+                            quill.insertEmbed(range.index, 'image', event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+
+        quill.root.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
 
         // Working Media Search using Wikimedia Commons for photos and Tenor public search for GIFs
         window.searchOnlineMedia = async function() {
