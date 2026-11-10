@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B1/B2 English Grammar & Speaking Practice</title>
+    <!-- Google Fonts: Cinzel Decorative -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-purple: #502064;
+            --burgundy: #6B0F1A;
+            --charcoal: #1A1A1A;
+            --lavender: #6B3A7E;
+            --light-lavender: #D8B4D9;
+            --pink-accent: #F48FB1;
+            --bg-light: #FDF8FE;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--charcoal);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 2.2rem;
+            color: var(--lavender);
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            font-style: italic;
+            color: var(--burgundy);
+            font-size: 0.95rem;
+            margin-top: 0;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: var(--white);
+            border: 2px solid var(--light-lavender);
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(80, 32, 100, 0.08);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--dark-purple);
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--light-lavender);
+            font-family: 'Century Gothic', sans-serif;
+            background: var(--bg-light);
+            color: var(--charcoal);
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Start Button */
+        .start-btn {
+            background-color: var(--dark-purple);
+            color: var(--white);
+            border: none;
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            font-family: 'Cinzel Decorative', serif;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(80, 32, 100, 0.3);
+        }
+
+        .start-btn:hover {
+            background-color: var(--burgundy);
+            transform: translateY(-2px);
+        }
+
+        .start-btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Timer Display */
+        .timer-container {
+            background: var(--dark-purple);
+            color: var(--white);
+            border: 3px solid var(--pink-accent);
+            border-radius: 50px;
+            padding: 10px 25px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(107, 15, 26, 0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-container.warning {
+            background: var(--burgundy);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* Cards Grid */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            border-left: 6px solid var(--lavender);
+            box-shadow: 0 4px 15px rgba(80, 32, 100, 0.08);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 150px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .card.spinning {
+            border-left-color: var(--pink-accent);
+            background: #FAF3FA;
+        }
+
+        .card-category {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.85rem;
+            color: var(--burgundy);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-content {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--dark-purple);
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .card-hint {
+            font-size: 0.85rem;
+            color: #555;
+            background: var(--bg-light);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px dashed var(--light-lavender);
+        }
+
+        #db-status {
+            font-size: 0.8rem;
+            color: var(--dark-purple);
+            margin-top: auto;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Grammar & Speaking Roulette</h1>
+        <p class="subtitle">B1/B2 Practice: Tense Review, Categorized Modal Verbs & Fluency Topics</p>
+    </header>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+        <div class="control-group">
+            <label for="difficulty">Game Mode / Cards</label>
+            <select id="difficulty">
+                <option value="easy">Easy (3 Cards)</option>
+                <option value="medium" selected>Medium (4 Cards)</option>
+                <option value="hard">Master Challenge (5 Cards)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="modal-filter">Modal Focus</label>
+            <select id="modal-filter">
+                <option value="all" selected>All Modal Groups (Random)</option>
+                <option value="ability">Ability & Possibility</option>
+                <option value="permission">Permission & Requests</option>
+                <option value="obligation">Obligation & Necessity</option>
+                <option value="prohibition">Prohibition & Lack of Obligation</option>
+                <option value="advice">Advice & Recommendation</option>
+                <option value="deduction">Deduction & Certainty</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="timer-setting">Response Timer</label>
+            <select id="timer-setting">
+                <option value="30">30 Seconds</option>
+                <option value="45">45 Seconds</option>
+                <option value="60" selected>60 Seconds</option>
+                <option value="90">90 Seconds</option>
+                <option value="off">No Timer</option>
+            </select>
+        </div>
+
+        <div style="display: flex; align-items: flex-end;">
+            <button class="start-btn" id="start-btn" onclick="startRoulette()">Start / Shuffle</button>
+        </div>
+    </div>
+
+    <!-- Timer Container -->
+    <div class="timer-container" id="timer-box">
+        ⏱️ <span id="timer-text">Time Remaining: 60s</span>
+    </div>
+
+    <!-- Cards Container -->
+    <div class="cards-container" id="game-board">
+        <div class="card" style="grid-column: 1 / -1; text-align: center; color: #777;">
+            Click <strong>"Start / Shuffle"</strong> to spin the grammar roulette!
+        </div>
+    </div>
+
+    <div id="db-status">Connecting to Firestore...</div>
+
+    <!-- Firebase SDK Modular -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2pSwDBIREaPmpOvainZzWGuuCEupxp1c",
+            authDomain: "studenttrackerpanel.firebaseapp.com",
+            projectId: "studenttrackerpanel",
+            storageBucket: "studenttrackerpanel.firebasestorage.app",
+            messagingSenderId: "1004678184015",
+            appId: "1:1004678184015:web:be95625c08d8ee73ffe3a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        document.getElementById('db-status').innerText = "✓ Connected to Firestore successfully!";
+        window.dbRef = db;
+        window.addDoc = addDoc;
+        window.collection = collection;
+        window.serverTimestamp = serverTimestamp;
+    </script>
+
+    <script>
+        // Dataset
+        const dataPool = {
+            // TENSES REVIEW
+            pastTenses: [
+                { title: "Past Review", content: "Past Continuous + Interruption", hint: "Describe an event that was happening when something else interrupted it (e.g., 'I was studying when...')." },
+                { title: "Past Review", content: "Used to / Past Habits", hint: "Talk about something you used to do regularly in the past that you no longer do now." },
+                { title: "Past Review", content: "Past Simple vs. Present Perfect", hint: "Contrast a completed past action at a specific time with a life experience up to now." },
+                { title: "Past Review", content: "Past Experience Narrative", hint: "Tell a short story about an unforgettable trip or unexpected event in the past." }
+            ],
+            presentTenses: [
+                { title: "Present Review", content: "Present Simple vs. Continuous", hint: "Contrast a permanent habit or routine with something temporary you are doing these days." },
+                { title: "Present Review", content: "Present Perfect (For / Since)", hint: "Explain how long you have known a friend or lived in your current city using 'for' or 'since'." },
+                { title: "Present Review", content: "Present Perfect (Just / Already / Yet)", hint: "Mention something you have just finished or haven't done yet today." }
+            ],
+            futureTenses: [
+                { title: "Future Review", content: "Going to vs. Will", hint: "Contrast a planned intention ('going to') with a spontaneous decision or prediction ('will')." },
+                { title: "Future Review", content: "Present Continuous for Future", hint: "Talk about fixed arrangements on your calendar for next weekend." },
+                { title: "Future Review", content: "First Conditional (If + Present, Will)", hint: "Make a real prediction: 'If I pass my exam / If it rains this weekend, I will...'" }
+            ],
+
+            // MODAL VERBS BY CATEGORY
+            modalAbility: [
+                { categoryKey: "ability", title: "Modal: Ability & Possibility", content: "Can / Could / Be able to", hint: "Talk about a skill you couldn't do before but were able to master recently." }
+            ],
+            modalPermission: [
+                { categoryKey: "permission", title: "Modal: Permission & Requests", content: "Could / May / Can", hint: "Formulate two polite requests you would make at a hotel or restaurant." }
+            ],
+            modalObligation: [
+                { categoryKey: "obligation", title: "Modal: Obligation & Necessity", content: "Must / Have to / Need to", hint: "Explain 3 key rules or duties you have to follow at your work or school." }
+            ],
+            modalProhibition: [
+                { categoryKey: "prohibition", title: "Modal: Prohibition vs Optional", content: "Mustn't vs. Don't have to", hint: "Contrast something strictly forbidden ('mustn't') with something optional ('don't have to')." }
+            ],
+            modalAdvice: [
+                { categoryKey: "advice", title: "Modal: Advice & Recommendation", content: "Should / Ought to / Had better", hint: "Give 2 pieces of advice to someone moving to another country." }
+            ],
+            modalDeduction: [
+                { categoryKey: "deduction", title: "Modal: Deduction & Certainty", content: "Must be / Can't be / Might be", hint: "Look around or imagine a picture and make deductions: 'He must be tired because...'" }
+            ],
+
+            // CONNECTORS
+            connectors: [
+                { title: "Linking Phrase", content: "However / On the other hand", hint: "Introduce a clear contrast to your previous statement." },
+                { title: "Linking Phrase", content: "As a result / Therefore", hint: "Explain a cause-and-effect relationship." },
+                { title: "Linking Phrase", content: "Furthermore / In addition", hint: "Add an extra supporting argument to your opinion." },
+                { title: "Linking Phrase", content: "In order to / So that", hint: "Explain the purpose or reason behind an action you take." }
+            ],
+
+            // TOPICS (B1/B2 Level)
+            topics: [
+                { title: "Speaking Topic", content: "Career & Future Ambitions", hint: "Discuss your goals and how learning English fits into your career." },
+                { title: "Speaking Topic", content: "Travel & Cultural Differences", hint: "Talk about a memorable place you visited or would love to explore." },
+                { title: "Speaking Topic", content: "Technology in Daily Life", hint: "Explain how apps or smart devices changed your daily routine." },
+                { title: "Speaking Topic", content: "Hobbies & Healthy Habits", hint: "Share how you spend your free time and stay physically active." },
+                { title: "Speaking Topic", content: "Learning Languages & Challenges", hint: "Reflect on what is easy and difficult for you in English." }
+            ]
+        };
+
+        // Sound Synthesizer (Web Audio API)
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playTickSound(frequency = 400) {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.04);
+            } catch (e) {}
+        }
+
+        function playWarningBeep() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.12);
+            } catch (e) {}
+        }
+
+        function playTimesUpAlarm() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'square';
+                osc1.frequency.setValueAtTime(880, now);
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'square';
+                osc2.frequency.setValueAtTime(1100, now + 0.18);
+                gain2.gain.setValueAtTime(0.25, now + 0.18);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.18);
+                osc2.stop(now + 0.35);
+            } catch (e) {}
+        }
+
+        let timerInterval = null;
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function getModalPool(filterValue) {
+            const allModals = [
+                ...dataPool.modalAbility,
+                ...dataPool.modalPermission,
+                ...dataPool.modalObligation,
+                ...dataPool.modalProhibition,
+                ...dataPool.modalAdvice,
+                ...dataPool.modalDeduction
+            ];
+
+            if (filterValue === 'ability') return dataPool.modalAbility;
+            if (filterValue === 'permission') return dataPool.modalPermission;
+            if (filterValue === 'obligation') return dataPool.modalObligation;
+            if (filterValue === 'prohibition') return dataPool.modalProhibition;
+            if (filterValue === 'advice') return dataPool.modalAdvice;
+            if (filterValue === 'deduction') return dataPool.modalDeduction;
+
+            return allModals;
+        }
+
+        function startRoulette() {
+            const startBtn = document.getElementById('start-btn');
+            const difficulty = document.getElementById('difficulty').value;
+            const modalFilter = document.getElementById('modal-filter').value;
+            const board = document.getElementById('game-board');
+            const timerBox = document.getElementById('timer-box');
+
+            // Reset Timer
+            if (timerInterval) clearInterval(timerInterval);
+            timerBox.style.display = 'none';
+            timerBox.classList.remove('warning');
+
+            startBtn.disabled = true;
+
+            // Pick random tenses pool
+            const tensesPools = [dataPool.pastTenses, dataPool.presentTenses, dataPool.futureTenses];
+            const modalPool = getModalPool(modalFilter);
+
+            let categories = [];
+
+            if (difficulty === 'easy') {
+                // 3 Cards: 1 Tense + 1 Modal Group + 1 Topic
+                categories = [getRandomItem(tensesPools), modalPool, dataPool.topics];
+            } else if (difficulty === 'medium') {
+                // 4 Cards: 1 Tense + 1 Modal Group + 1 Connector + 1 Topic
+                categories = [getRandomItem(tensesPools), modalPool, dataPool.connectors, dataPool.topics];
+            } else {
+                // Hard / Master: 2 Tenses + 1 Modal Group + 1 Connector + 1 Topic
+                const shuffledTenses = [...tensesPools].sort(() => 0.5 - Math.random());
+                categories = [shuffledTenses[0], shuffledTenses[1], modalPool, dataPool.connectors, dataPool.topics];
+            }
+
+            // Create Card DOM layout
+            board.innerHTML = '';
+            const cardElements = categories.map(pool => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card spinning';
+                cardEl.innerHTML = `
+                    <div>
+                        <div class="card-category">${pool[0].title}</div>
+                        <div class="card-content">...</div>
+                    </div>
+                    <div class="card-hint">Spinning...</div>
+                `;
+                board.appendChild(cardEl);
+                return { element: cardEl, pool: pool, finalItem: getRandomItem(pool) };
+            });
+
+            // Roulette Slowdown Effect
+            let step = 0;
+            const totalSteps = 25;
+
+            function spinStep() {
+                step++;
+                cardElements.forEach(item => {
+                    const randomTemp = getRandomItem(item.pool);
+                    item.element.querySelector('.card-content').innerText = randomTemp.content;
+                    item.element.querySelector('.card-hint').innerText = "💡 " + randomTemp.hint;
+                });
+
+                playTickSound(350 + step * 10);
+
+                if (step < totalSteps) {
+                    const delay = 50 + Math.pow(step, 1.8);
+                    setTimeout(spinStep, delay);
+                } else {
+                    // Final Stop
+                    cardElements.forEach(item => {
+                        item.element.classList.remove('spinning');
+                        item.element.querySelector('.card-content').innerText = item.finalItem.content;
+                        item.element.querySelector('.card-hint').innerText = "💡 " + item.finalItem.hint;
+                    });
+
+                    playTickSound(800);
+                    startBtn.disabled = false;
+
+                    initTimer();
+                    saveToFirestore(difficulty, modalFilter, cardElements.map(i => i.finalItem.content));
+                }
+            }
+
+            spinStep();
+        }
+
+        function initTimer() {
+            const timerSetting = document.getElementById('timer-setting').value;
+            const timerBox = document.getElementById('timer-box');
+            const timerText = document.getElementById('timer-text');
+
+            if (timerSetting === 'off') return;
+
+            let timeLeft = parseInt(timerSetting);
+            timerBox.style.display = 'flex';
+            timerText.innerText = `Time Remaining: ${timeLeft}s`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerText.innerText = `Time Remaining: ${timeLeft}s`;
+
+                if (timeLeft <= 10 && timeLeft > 0) {
+                    timerBox.classList.add('warning');
+                }
+
+                if (timeLeft <= 3 && timeLeft > 0) {
+                    playWarningBeep();
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerText.innerText = "⏱️ Time's Up!";
+                    playTimesUpAlarm();
+                    setTimeout(() => {
+                        alert("Time's up! Great effort. Review if you used all required tenses, modals, and phrases!");
+                    }, 50);
+                }
+            }, 1000);
+        }
+
+        async function saveToFirestore(difficulty, modalFilter, cardsDrawn) {
+            try {
+                if (window.dbRef && window.addDoc) {
+                    await window.addDoc(window.collection(window.dbRef, "grammar_review_sessions"), {
+                        difficulty: difficulty,
+                        modalFilter: modalFilter,
+                        cardsDrawn: cardsDrawn,
+                        timestamp: window.serverTimestamp()
+                    });
+                }
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>
