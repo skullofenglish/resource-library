@@ -208,7 +208,7 @@
 
     <header>
         <h1>Grammar & Speaking Roulette</h1>
-        <p class="subtitle">B1/B2 Practice: Tense Review, Categorized Modal Verbs & Fluency Topics</p>
+        <p class="subtitle">B1/B2 Practice: Tense Review, Functional Expressions & Topics</p>
     </header>
 
     <!-- Controls Panel -->
@@ -225,7 +225,8 @@
         <div class="control-group">
             <label for="modal-filter">Modal Focus</label>
             <select id="modal-filter">
-                <option value="all" selected>All Modal Groups (Random)</option>
+                <option value="none" selected>None (No Modals)</option>
+                <option value="all">All Modal Groups (Random)</option>
                 <option value="ability">Ability & Possibility</option>
                 <option value="permission">Permission & Requests</option>
                 <option value="obligation">Obligation & Necessity</option>
@@ -292,59 +293,62 @@
     <script>
         // Dataset
         const dataPool = {
-            // TENSES REVIEW
-            pastTenses: [
-                { title: "Past Review", content: "Past Continuous + Interruption", hint: "Describe an event that was happening when something else interrupted it (e.g., 'I was studying when...')." },
-                { title: "Past Review", content: "Used to / Past Habits", hint: "Talk about something you used to do regularly in the past that you no longer do now." },
-                { title: "Past Review", content: "Past Simple vs. Present Perfect", hint: "Contrast a completed past action at a specific time with a life experience up to now." },
-                { title: "Past Review", content: "Past Experience Narrative", hint: "Tell a short story about an unforgettable trip or unexpected event in the past." }
+            // VERB TENSES REVIEW (RESTRITO AO PEDIDO)
+            tenses: [
+                { title: "Verb Tense", content: "Present Simple", hint: "Express a general truth, habit, daily routine, or personal fact." },
+                { title: "Verb Tense", content: "Present Continuous", hint: "Describe an action happening right now or a current temporary situation." },
+                { title: "Verb Tense", content: "Past Simple", hint: "Talk about a completed past event at a specific time in the past." },
+                { title: "Verb Tense", content: "Past Continuous", hint: "Describe an ongoing action that was in progress in the past." },
+                { title: "Verb Tense", content: "Present Perfect", hint: "Share a life experience up to now or something that started in the past and continues." },
+                { title: "Verb Tense", content: "Used to", hint: "Talk about a past habit or routine that you no longer do today." },
+                { title: "Verb Tense", content: "Future: Will Simple", hint: "Make a prediction, a spontaneous offer, or a promise about the future." },
+                { title: "Verb Tense", content: "Future: Going to Simple", hint: "Discuss a future plan, intention, or something you've already decided to do." }
             ],
-            presentTenses: [
-                { title: "Present Review", content: "Present Simple vs. Continuous", hint: "Contrast a permanent habit or routine with something temporary you are doing these days." },
-                { title: "Present Review", content: "Present Perfect (For / Since)", hint: "Explain how long you have known a friend or lived in your current city using 'for' or 'since'." },
-                { title: "Present Review", content: "Present Perfect (Just / Already / Yet)", hint: "Mention something you have just finished or haven't done yet today." }
-            ],
-            futureTenses: [
-                { title: "Future Review", content: "Going to vs. Will", hint: "Contrast a planned intention ('going to') with a spontaneous decision or prediction ('will')." },
-                { title: "Future Review", content: "Present Continuous for Future", hint: "Talk about fixed arrangements on your calendar for next weekend." },
-                { title: "Future Review", content: "First Conditional (If + Present, Will)", hint: "Make a real prediction: 'If I pass my exam / If it rains this weekend, I will...'" }
+
+            // FUNCTIONAL EXPRESSIONS (OPINION, LIKES/DISLIKES, AGREE/DISAGREE)
+            expressions: [
+                // Giving Opinion
+                { title: "Expression: Opinion", content: "In my opinion / In my view...", hint: "Use this to state your point of view clearly." },
+                { title: "Expression: Opinion", content: "As far as I'm concerned...", hint: "Use this to introduce your strong personal perspective." },
+                { title: "Expression: Opinion", content: "From my perspective...", hint: "Frame your thoughts from your personal viewpoint." },
+                
+                // Likes & Dislikes
+                { title: "Expression: Likes & Dislikes", content: "I'm really keen on / I'm fond of...", hint: "Express something you really enjoy doing." },
+                { title: "Expression: Likes & Dislikes", content: "I can't stand / I'm not a big fan of...", hint: "Express strong dislike for a habit or activity." },
+                { title: "Expression: Likes & Dislikes", content: "I'd much rather...", hint: "Express a preference for one thing over another." },
+
+                // Agreement & Disagreement
+                { title: "Expression: Agree / Disagree", content: "I couldn't agree more!", hint: "Express total agreement with an idea or statement." },
+                { title: "Expression: Agree / Disagree", content: "I see your point, but...", hint: "Politely disagree or offer a counter-perspective." },
+                { title: "Expression: Agree / Disagree", content: "That's a valid point, however...", hint: "Acknowledge an idea before presenting your own argument." }
             ],
 
             // MODAL VERBS BY CATEGORY
             modalAbility: [
-                { categoryKey: "ability", title: "Modal: Ability & Possibility", content: "Can / Could / Be able to", hint: "Talk about a skill you couldn't do before but were able to master recently." }
+                { categoryKey: "ability", title: "Modal: Ability & Possibility", content: "Can / Could / Be able to", hint: "Talk about a skill or something you manage to do." }
             ],
             modalPermission: [
-                { categoryKey: "permission", title: "Modal: Permission & Requests", content: "Could / May / Can", hint: "Formulate two polite requests you would make at a hotel or restaurant." }
+                { categoryKey: "permission", title: "Modal: Permission & Requests", content: "Could / May / Can", hint: "Formulate a polite request or permission expression." }
             ],
             modalObligation: [
-                { categoryKey: "obligation", title: "Modal: Obligation & Necessity", content: "Must / Have to / Need to", hint: "Explain 3 key rules or duties you have to follow at your work or school." }
+                { categoryKey: "obligation", title: "Modal: Obligation & Necessity", content: "Must / Have to / Need to", hint: "Explain a rule, obligation, or absolute necessity." }
             ],
             modalProhibition: [
-                { categoryKey: "prohibition", title: "Modal: Prohibition vs Optional", content: "Mustn't vs. Don't have to", hint: "Contrast something strictly forbidden ('mustn't') with something optional ('don't have to')." }
+                { categoryKey: "prohibition", title: "Modal: Prohibition vs Optional", content: "Mustn't vs. Don't have to", hint: "Contrast 'strictly forbidden' with 'not necessary'." }
             ],
             modalAdvice: [
-                { categoryKey: "advice", title: "Modal: Advice & Recommendation", content: "Should / Ought to / Had better", hint: "Give 2 pieces of advice to someone moving to another country." }
+                { categoryKey: "advice", title: "Modal: Advice & Recommendation", content: "Should / Ought to / Had better", hint: "Give a recommendation or practical advice." }
             ],
             modalDeduction: [
-                { categoryKey: "deduction", title: "Modal: Deduction & Certainty", content: "Must be / Can't be / Might be", hint: "Look around or imagine a picture and make deductions: 'He must be tired because...'" }
+                { categoryKey: "deduction", title: "Modal: Deduction & Certainty", content: "Must be / Can't be / Might be", hint: "Make a speculation or logical deduction about a situation." }
             ],
 
-            // CONNECTORS
-            connectors: [
-                { title: "Linking Phrase", content: "However / On the other hand", hint: "Introduce a clear contrast to your previous statement." },
-                { title: "Linking Phrase", content: "As a result / Therefore", hint: "Explain a cause-and-effect relationship." },
-                { title: "Linking Phrase", content: "Furthermore / In addition", hint: "Add an extra supporting argument to your opinion." },
-                { title: "Linking Phrase", content: "In order to / So that", hint: "Explain the purpose or reason behind an action you take." }
-            ],
-
-            // TOPICS (B1/B2 Level)
+            // TOPICS (SOLICITADOS)
             topics: [
-                { title: "Speaking Topic", content: "Career & Future Ambitions", hint: "Discuss your goals and how learning English fits into your career." },
-                { title: "Speaking Topic", content: "Travel & Cultural Differences", hint: "Talk about a memorable place you visited or would love to explore." },
-                { title: "Speaking Topic", content: "Technology in Daily Life", hint: "Explain how apps or smart devices changed your daily routine." },
-                { title: "Speaking Topic", content: "Hobbies & Healthy Habits", hint: "Share how you spend your free time and stay physically active." },
-                { title: "Speaking Topic", content: "Learning Languages & Challenges", hint: "Reflect on what is easy and difficult for you in English." }
+                { title: "Speaking Topic", content: "Travel Plans", hint: "Discuss destination ideas, upcoming trips, or dream vacations." },
+                { title: "Speaking Topic", content: "Benefits of Working Out Regularly", hint: "Talk about physical and mental health perks of staying active." },
+                { title: "Speaking Topic", content: "Benefits vs. Downsides of Self-employment", hint: "Discuss freedom vs. financial risks of working for yourself." },
+                { title: "Speaking Topic", content: "Veganism & Plant-based Lifestyle", hint: "Share thoughts on diet choices, ethics, or health trends." }
             ]
         };
 
@@ -431,6 +435,8 @@
         }
 
         function getModalPool(filterValue) {
+            if (filterValue === 'none') return null;
+
             const allModals = [
                 ...dataPool.modalAbility,
                 ...dataPool.modalPermission,
@@ -464,22 +470,33 @@
 
             startBtn.disabled = true;
 
-            // Pick random tenses pool
-            const tensesPools = [dataPool.pastTenses, dataPool.presentTenses, dataPool.futureTenses];
             const modalPool = getModalPool(modalFilter);
-
             let categories = [];
 
-            if (difficulty === 'easy') {
-                // 3 Cards: 1 Tense + 1 Modal Group + 1 Topic
-                categories = [getRandomItem(tensesPools), modalPool, dataPool.topics];
-            } else if (difficulty === 'medium') {
-                // 4 Cards: 1 Tense + 1 Modal Group + 1 Connector + 1 Topic
-                categories = [getRandomItem(tensesPools), modalPool, dataPool.connectors, dataPool.topics];
+            if (modalFilter === 'none') {
+                // SEM MODALS
+                if (difficulty === 'easy') {
+                    // 3 Cards: 1 Tense + 1 Expression + 1 Topic
+                    categories = [dataPool.tenses, dataPool.expressions, dataPool.topics];
+                } else if (difficulty === 'medium') {
+                    // 4 Cards: 2 Tenses + 1 Expression + 1 Topic
+                    categories = [dataPool.tenses, dataPool.tenses, dataPool.expressions, dataPool.topics];
+                } else {
+                    // Hard: 2 Tenses + 2 Expressions + 1 Topic
+                    categories = [dataPool.tenses, dataPool.tenses, dataPool.expressions, dataPool.expressions, dataPool.topics];
+                }
             } else {
-                // Hard / Master: 2 Tenses + 1 Modal Group + 1 Connector + 1 Topic
-                const shuffledTenses = [...tensesPools].sort(() => 0.5 - Math.random());
-                categories = [shuffledTenses[0], shuffledTenses[1], modalPool, dataPool.connectors, dataPool.topics];
+                // COM MODALS
+                if (difficulty === 'easy') {
+                    // 3 Cards: 1 Tense + 1 Modal Group + 1 Topic
+                    categories = [dataPool.tenses, modalPool, dataPool.topics];
+                } else if (difficulty === 'medium') {
+                    // 4 Cards: 1 Tense + 1 Modal Group + 1 Expression + 1 Topic
+                    categories = [dataPool.tenses, modalPool, dataPool.expressions, dataPool.topics];
+                } else {
+                    // Hard: 2 Tenses + 1 Modal Group + 1 Expression + 1 Topic
+                    categories = [dataPool.tenses, dataPool.tenses, modalPool, dataPool.expressions, dataPool.topics];
+                }
             }
 
             // Create Card DOM layout
@@ -562,7 +579,7 @@
                     timerText.innerText = "⏱️ Time's Up!";
                     playTimesUpAlarm();
                     setTimeout(() => {
-                        alert("Time's up! Great effort. Review if you used all required tenses, modals, and phrases!");
+                        alert("Time's up! Great job. Check if you included the required tenses, expressions, and topic ideas!");
                     }, 50);
                 }
             }, 1000);
