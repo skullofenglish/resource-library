@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Whiteboard & Notes</title>
 
-    <!-- 🤍 GOTHIC FAVICON -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤍</text></svg>">
+    <!-- 🌙 GOTHIC FAVICON -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -47,6 +47,19 @@
             min-height: 400px;
             font-family: inherit;
             font-size: 1rem;
+            position: relative;
+        }
+        .ql-editor {
+            min-height: 400px;
+            overflow: auto;
+        }
+        .ql-editor img {
+            cursor: pointer;
+            max-width: 100%;
+            transition: outline 0.15s ease;
+        }
+        .ql-editor img:hover {
+            outline: 2px dashed #6B3A7E;
         }
         .ql-stroke { stroke: #502064 !important; }
         .ql-fill { fill: #502064 !important; }
@@ -55,11 +68,77 @@
             background-color: #FFFFFF !important;
             border-color: #6B3A7E !important;
         }
-        .ql-editor img {
-            max-width: 400px;
-            height: auto;
-            border-radius: 6px;
-            margin: 5px;
+
+        /* Image Resize & Positioning Overlay */
+        #img-manipulator-overlay {
+            position: absolute;
+            border: 2px solid #502064;
+            pointer-events: none;
+            z-index: 40;
+            box-sizing: border-box;
+        }
+        .img-resize-handle {
+            position: absolute;
+            width: 11px;
+            height: 11px;
+            background: #502064;
+            border: 2px solid #FFFFFF;
+            border-radius: 2px;
+            pointer-events: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .img-resize-handle.nw { top: -6px; left: -6px; cursor: nwse-resize; }
+        .img-resize-handle.ne { top: -6px; right: -6px; cursor: nesw-resize; }
+        .img-resize-handle.sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+        .img-resize-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+        .img-resize-handle.n  { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+        .img-resize-handle.s  { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+        .img-resize-handle.w  { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
+        .img-resize-handle.e  { top: 50%; right: -6px; transform: translateY(-50%); cursor: ew-resize; }
+
+        #img-floating-toolbar {
+            position: absolute;
+            z-index: 50;
+            background: #FFFFFF;
+            border: 1px solid #6B3A7E;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 14px rgba(80, 32, 100, 0.2);
+            padding: 6px 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            pointer-events: auto;
+        }
+        #img-floating-toolbar button {
+            padding: 4px 7px;
+            border-radius: 4px;
+            border: 1px solid #E5E7EB;
+            background: #F9FAFB;
+            color: #2D232E;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+        #img-floating-toolbar button:hover {
+            background: #F48FB1;
+            color: #502064;
+            border-color: #6B3A7E;
+        }
+        #img-floating-toolbar button.active-layout {
+            background: #502064;
+            color: #FFFFFF;
+            border-color: #502064;
+        }
+        .toolbar-divider {
+            width: 1px;
+            height: 18px;
+            background: #D1D5DB;
+            margin: 0 3px;
         }
     </style>
 </head>
@@ -119,11 +198,7 @@
                     <label class="text-xs text-neutral-500 mb-1 block font-semibold">Board Title</label>
                     <input type="text" id="board-title-input" oninput="updateActiveBoardTitle(this.value)" placeholder="e.g., Grammar Explanations - Room 3" class="w-full px-3 py-2 bg-neutral-50 border border-[#6B3A7E]/40 text-neutral-800 font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-[#502064]">
                 </div>
-                <div class="w-full sm:w-auto flex justify-end gap-2">
-                    <label class="px-4 py-2 bg-[#502064]/10 hover:bg-[#502064]/20 text-[#502064] text-xs font-bold rounded-lg border border-[#6B3A7E]/30 transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-upload"></i> Upload Images
-                        <input type="file" id="local-image-upload" accept="image/*" multiple class="hidden" onchange="handleLocalImageUpload(event)">
-                    </label>
+                <div class="w-full sm:w-auto flex justify-end">
                     <button onclick="toggleMediaLibrary()" class="px-4 py-2 bg-[#F48FB1]/20 hover:bg-[#F48FB1]/40 text-[#502064] text-xs font-bold rounded-lg border border-[#6B3A7E]/30 transition flex items-center gap-2">
                         <i class="fa-solid fa-images"></i> Insert Web Image / GIF
                     </button>
@@ -153,7 +228,7 @@
             </div>
 
             <!-- QUILL EDITOR CONTAINER -->
-            <div>
+            <div id="editor-wrapper" class="relative">
                 <div id="whiteboard-quill"></div>
             </div>
         </div>
@@ -177,6 +252,33 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Register Custom Image Blot to preserve inline styles (width, height, float, display, margin)
+        const BaseImage = Quill.import('formats/image');
+        const IMAGE_STYLE_ATTRIBUTES = ['alt', 'height', 'width', 'style'];
+
+        class CustomImageBlot extends BaseImage {
+            static formats(domNode) {
+                return IMAGE_STYLE_ATTRIBUTES.reduce((formats, attribute) => {
+                    if (domNode.hasAttribute(attribute)) {
+                        formats[attribute] = domNode.getAttribute(attribute);
+                    }
+                    return formats;
+                }, {});
+            }
+            format(name, value) {
+                if (IMAGE_STYLE_ATTRIBUTES.indexOf(name) > -1) {
+                    if (value) {
+                        this.domNode.setAttribute(name, value);
+                    } else {
+                        this.domNode.removeAttribute(name);
+                    }
+                } else {
+                    super.format(name, value);
+                }
+            }
+        }
+        Quill.register(CustomImageBlot, true);
+
         // Initialize Quill Editor with Full Formatting & Color Pickers
         const quill = new Quill('#whiteboard-quill', {
             theme: 'snow',
@@ -190,7 +292,270 @@
                     ['link', 'image', 'clean']
                 ]
             },
-            placeholder: 'Start writing, typing notes, or dragging and dropping images here...'
+            placeholder: 'Start writing, typing notes, or inserting media here...'
+        });
+
+        /* =========================================================
+           IMAGE RESIZE & POSITIONING CONTROLLER
+        ========================================================= */
+        let selectedImg = null;
+        let overlayBox = null;
+        let floatingToolbar = null;
+
+        function clearImageSelection() {
+            selectedImg = null;
+            if (overlayBox) {
+                overlayBox.remove();
+                overlayBox = null;
+            }
+            if (floatingToolbar) {
+                floatingToolbar.remove();
+                floatingToolbar = null;
+            }
+        }
+
+        function syncOverlayPosition() {
+            if (!selectedImg || !overlayBox || !floatingToolbar) return;
+            if (!document.body.contains(selectedImg)) {
+                clearImageSelection();
+                return;
+            }
+            const wrapper = document.getElementById('editor-wrapper');
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const imgRect = selectedImg.getBoundingClientRect();
+
+            const top = imgRect.top - wrapperRect.top;
+            const left = imgRect.left - wrapperRect.left;
+
+            overlayBox.style.top = `${top}px`;
+            overlayBox.style.left = `${left}px`;
+            overlayBox.style.width = `${imgRect.width}px`;
+            overlayBox.style.height = `${imgRect.height}px`;
+
+            // Position floating toolbar above or below image cleanly
+            const toolbarHeight = floatingToolbar.offsetHeight || 38;
+            let toolbarTop = top - toolbarHeight - 8;
+            if (toolbarTop < 0) {
+                toolbarTop = top + imgRect.height + 8;
+            }
+            let toolbarLeft = Math.max(0, Math.min(left, wrapperRect.width - floatingToolbar.offsetWidth));
+            floatingToolbar.style.top = `${toolbarTop}px`;
+            floatingToolbar.style.left = `${toolbarLeft}px`;
+        }
+
+        function getCurrentImageMode(img) {
+            const floatVal = img.style.float;
+            const displayVal = img.style.display;
+            if (floatVal === 'left') return 'left';
+            if (floatVal === 'right') return 'right';
+            if (displayVal === 'block') return 'block';
+            return 'inline';
+        }
+
+        function applyImageLayout(mode) {
+            if (!selectedImg) return;
+            if (mode === 'inline') {
+                selectedImg.style.float = 'none';
+                selectedImg.style.display = 'inline-block';
+                selectedImg.style.margin = '4px 6px';
+                selectedImg.style.verticalAlign = 'middle';
+            } else if (mode === 'left') {
+                selectedImg.style.display = 'inline-block';
+                selectedImg.style.float = 'left';
+                selectedImg.style.margin = '4px 16px 10px 0px';
+                selectedImg.style.verticalAlign = '';
+            } else if (mode === 'right') {
+                selectedImg.style.display = 'inline-block';
+                selectedImg.style.float = 'right';
+                selectedImg.style.margin = '4px 0px 10px 16px';
+                selectedImg.style.verticalAlign = '';
+            } else if (mode === 'block') {
+                selectedImg.style.float = 'none';
+                selectedImg.style.display = 'block';
+                selectedImg.style.margin = '12px auto';
+                selectedImg.style.verticalAlign = '';
+            }
+            updateToolbarActiveState();
+            requestAnimationFrame(syncOverlayPosition);
+        }
+
+        function applyQuickSize(percent) {
+            if (!selectedImg) return;
+            const editorWidth = quill.root.clientWidth - 32;
+            const targetWidth = Math.max(40, Math.round((editorWidth * percent) / 100));
+            selectedImg.style.width = `${targetWidth}px`;
+            selectedImg.style.height = 'auto';
+            selectedImg.removeAttribute('height');
+            selectedImg.setAttribute('width', targetWidth);
+            requestAnimationFrame(syncOverlayPosition);
+        }
+
+        function moveImageVertical(direction) {
+            if (!selectedImg) return;
+            const editor = quill.root;
+            // Find top-level block containing the image
+            let block = selectedImg;
+            while (block && block.parentElement !== editor) {
+                block = block.parentElement;
+            }
+            if (!block) return;
+
+            if (direction === 'up' && block.previousElementSibling) {
+                editor.insertBefore(block, block.previousElementSibling);
+            } else if (direction === 'down' && block.nextElementSibling) {
+                editor.insertBefore(block.nextElementSibling, block);
+            }
+            requestAnimationFrame(syncOverlayPosition);
+        }
+
+        function updateToolbarActiveState() {
+            if (!floatingToolbar || !selectedImg) return;
+            const currentMode = getCurrentImageMode(selectedImg);
+            floatingToolbar.querySelectorAll('[data-layout]').forEach(btn => {
+                btn.classList.toggle('active-layout', btn.getAttribute('data-layout') === currentMode);
+            });
+        }
+
+        function selectImageForEditing(img) {
+            clearImageSelection();
+            selectedImg = img;
+            const wrapper = document.getElementById('editor-wrapper');
+
+            // Create resize overlay box with 8 handles (4 corners + 4 edges)
+            overlayBox = document.createElement('div');
+            overlayBox.id = 'img-manipulator-overlay';
+            const handles = ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'];
+            handles.forEach(dir => {
+                const h = document.createElement('div');
+                h.className = `img-resize-handle ${dir}`;
+                h.dataset.dir = dir;
+                overlayBox.appendChild(h);
+            });
+            wrapper.appendChild(overlayBox);
+
+            // Create floating controls for text wrap & position
+            floatingToolbar = document.createElement('div');
+            floatingToolbar.id = 'img-floating-toolbar';
+            floatingToolbar.innerHTML = `
+                <button type="button" data-layout="inline" title="Na linha com o texto"><i class="fa-solid fa-align-justify"></i> Na linha</button>
+                <button type="button" data-layout="left" title="À esquerda (texto ao lado direito)"><i class="fa-solid fa-indent"></i> Esq. + Texto</button>
+                <button type="button" data-layout="right" title="À direita (texto ao lado esquerdo)"><i class="fa-solid fa-outdent"></i> Dir. + Texto</button>
+                <button type="button" data-layout="block" title="Bloco separado (acima/abaixo do texto)"><i class="fa-solid fa-square"></i> Bloco</button>
+                <span class="toolbar-divider"></span>
+                <button type="button" data-move="up" title="Mover imagem para cima"><i class="fa-solid fa-arrow-up"></i> Cima</button>
+                <button type="button" data-move="down" title="Mover imagem para baixo"><i class="fa-solid fa-arrow-down"></i> Baixo</button>
+                <span class="toolbar-divider"></span>
+                <button type="button" data-size="25" title="Largura 25%">25%</button>
+                <button type="button" data-size="50" title="Largura 50%">50%</button>
+                <button type="button" data-size="75" title="Largura 75%">75%</button>
+                <button type="button" data-size="100" title="Largura 100%">100%</button>
+                <span class="toolbar-divider"></span>
+                <button type="button" data-action="delete" title="Remover imagem" style="color:#B91C1C;"><i class="fa-solid fa-trash"></i></button>
+            `;
+            wrapper.appendChild(floatingToolbar);
+
+            // Toolbar events
+            floatingToolbar.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            floatingToolbar.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                if (btn.dataset.layout) applyImageLayout(btn.dataset.layout);
+                if (btn.dataset.move) moveImageVertical(btn.dataset.move);
+                if (btn.dataset.size) applyQuickSize(Number(btn.dataset.size));
+                if (btn.dataset.action === 'delete' && selectedImg) {
+                    selectedImg.remove();
+                    clearImageSelection();
+                }
+            });
+
+            // Drag-to-resize logic
+            overlayBox.addEventListener('mousedown', (e) => {
+                const handle = e.target.closest('.img-resize-handle');
+                if (!handle || !selectedImg) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const dir = handle.dataset.dir;
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startWidth = selectedImg.getBoundingClientRect().width;
+                const startHeight = selectedImg.getBoundingClientRect().height;
+                const aspectRatio = startWidth / (startHeight || 1);
+
+                function onMouseMove(moveEvent) {
+                    const dx = moveEvent.clientX - startX;
+                    const dy = moveEvent.clientY - startY;
+
+                    let newWidth = startWidth;
+                    let newHeight = startHeight;
+
+                    if (dir.includes('e')) newWidth = startWidth + dx;
+                    if (dir.includes('w')) newWidth = startWidth - dx;
+                    if (dir.includes('s')) newHeight = startHeight + dy;
+                    if (dir.includes('n')) newHeight = startHeight - dy;
+
+                    newWidth = Math.max(30, Math.round(newWidth));
+                    newHeight = Math.max(30, Math.round(newHeight));
+
+                    // Corner handles preserve aspect ratio unless Shift is held; edge handles resize freely
+                    const isCorner = dir.length === 2;
+                    if (isCorner && !moveEvent.shiftKey) {
+                        newHeight = Math.round(newWidth / aspectRatio);
+                        selectedImg.style.width = `${newWidth}px`;
+                        selectedImg.style.height = 'auto';
+                        selectedImg.setAttribute('width', newWidth);
+                        selectedImg.removeAttribute('height');
+                    } else {
+                        selectedImg.style.width = `${newWidth}px`;
+                        selectedImg.style.height = `${newHeight}px`;
+                        selectedImg.setAttribute('width', newWidth);
+                        selectedImg.setAttribute('height', newHeight);
+                    }
+                    syncOverlayPosition();
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            updateToolbarActiveState();
+            syncOverlayPosition();
+        }
+
+        // Click listener inside Quill editor to select/deselect images
+        quill.root.addEventListener('click', (e) => {
+            if (e.target && e.target.tagName === 'IMG') {
+                selectImageForEditing(e.target);
+            } else {
+                clearImageSelection();
+            }
+        });
+
+        // Deselect when clicking outside editor wrapper
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('editor-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                clearImageSelection();
+            }
+        });
+
+        // Reposition overlay on scroll or window resize
+        quill.root.addEventListener('scroll', syncOverlayPosition);
+        window.addEventListener('resize', syncOverlayPosition);
+        quill.on('text-change', () => {
+            if (selectedImg && !document.body.contains(selectedImg)) {
+                clearImageSelection();
+            } else {
+                requestAnimationFrame(syncOverlayPosition);
+            }
         });
 
         let boardsList = [];
@@ -200,72 +565,6 @@
             const panel = document.getElementById('media-library-panel');
             panel.classList.toggle('hidden');
         };
-
-        // Helper function to compress and resize image before inserting (prevents Firestore storage limit errors)
-        function resizeAndProcessImage(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-                    const maxWidth = 800; // Max width limit for efficient saving
-
-                    if (width > maxWidth) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Compress to JPEG with 0.8 quality
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    callback(dataUrl);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function processAndInsertFiles(files) {
-            const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
-            imageFiles.forEach(file => {
-                resizeAndProcessImage(file, function(optimizedUrl) {
-                    const range = quill.getSelection() || { index: quill.getLength() };
-                    quill.insertEmbed(range.index, 'image', optimizedUrl);
-                    quill.insertText(range.index + 1, '\n');
-                    quill.setSelection(range.index + 2);
-                });
-            });
-        }
-
-        // Handle Bulk Local Image Upload via Device Button
-        window.handleLocalImageUpload = function(event) {
-            if (event.target.files && event.target.files.length > 0) {
-                processAndInsertFiles(event.target.files);
-            }
-            event.target.value = ''; 
-        };
-
-        // Handle Drag and Drop Multiple Images directly into Quill Editor area
-        const quillContainer = document.querySelector('#whiteboard-quill');
-
-        quillContainer.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-
-        quillContainer.addEventListener('drop', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                processAndInsertFiles(e.dataTransfer.files);
-            }
-        });
 
         // Working Media Search using Wikimedia Commons for photos and Tenor public search for GIFs
         window.searchOnlineMedia = async function() {
@@ -279,6 +578,7 @@
 
             try {
                 if (mediaType === 'photo') {
+                    // Wikimedia Commons API for real matching images
                     const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(queryVal)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`;
                     const res = await fetch(url);
                     const data = await res.json();
@@ -299,6 +599,7 @@
                         resultsGrid.innerHTML = `<p class="text-xs text-neutral-500 col-span-full italic">No photos found.</p>`;
                     }
                 } else {
+                    // Tenor Public Anonymous Search API for real working GIFs
                     const tenorUrl = `https://g.tenor.com/v1/search?q=${encodeURIComponent(queryVal)}&key=LIVDSRZULELA&limit=12`;
                     const res = await fetch(tenorUrl);
                     const data = await res.json();
@@ -330,35 +631,25 @@
             toggleMediaLibrary();
         };
 
-        let isInitialLoad = true;
-
         // Firebase Realtime Listener for Whiteboards
         onSnapshot(query(collection(db, "whiteboards"), orderBy("createdAt", "desc")), (snapshot) => {
-            const newBoardsList = [];
+            boardsList = [];
             snapshot.forEach(docSnap => {
-                newBoardsList.push({ id: docSnap.id, ...docSnap.data() });
+                boardsList.push({ id: docSnap.id, ...docSnap.data() });
             });
 
-            if (newBoardsList.length === 0) {
+            if (boardsList.length === 0) {
                 addDoc(collection(db, "whiteboards"), {
                     title: "Default Board",
                     contentHtml: "<p>Welcome to your interactive whiteboard!</p>",
                     createdAt: Date.now()
                 });
-                return;
-            }
-
-            boardsList = newBoardsList;
-
-            if (!activeBoardId || !boardsList.some(b => b.id === activeBoardId)) {
-                activeBoardId = boardsList[0].id;
-            }
-
-            renderBoardsTabs();
-
-            if (isInitialLoad) {
+            } else {
+                if (!activeBoardId || !boardsList.some(b => b.id === activeBoardId)) {
+                    activeBoardId = boardsList[0].id;
+                }
+                renderBoardsTabs();
                 loadActiveBoardData();
-                isInitialLoad = false;
             }
         });
 
@@ -379,19 +670,18 @@
         };
 
         window.switchBoard = function(id) {
+            clearImageSelection();
             activeBoardId = id;
             renderBoardsTabs();
             loadActiveBoardData();
         };
 
         function loadActiveBoardData() {
+            clearImageSelection();
             const activeBoard = boardsList.find(b => b.id === activeBoardId);
             if (activeBoard) {
                 document.getElementById('board-title-input').value = activeBoard.title || '';
-                const currentHtml = quill.root.innerHTML;
-                if (currentHtml !== (activeBoard.contentHtml || '')) {
-                    quill.root.innerHTML = activeBoard.contentHtml || '';
-                }
+                quill.root.innerHTML = activeBoard.contentHtml || '';
             }
         }
 
@@ -412,6 +702,7 @@
 
         window.saveCurrentBoard = async function() {
             if (!activeBoardId) return;
+            clearImageSelection();
             const title = document.getElementById('board-title-input').value || 'Untitled Board';
             const contentHtml = quill.root.innerHTML;
 
@@ -423,12 +714,13 @@
                 alert("Board successfully saved to the cloud!");
             } catch (err) {
                 console.error("Error saving board:", err);
-                alert("Error saving board. The images might still be too heavy or large. Try uploading fewer or smaller images.");
+                alert("Error saving board.");
             }
         };
 
         window.clearCurrentBoard = function() {
             if (confirm("Are you sure you want to clear this board's content?")) {
+                clearImageSelection();
                 quill.setText('');
             }
         };
@@ -440,6 +732,7 @@
         };
 
         window.downloadAsDoc = function() {
+            clearImageSelection();
             const title = document.getElementById('board-title-input').value || 'Whiteboard';
             const contentHtml = quill.root.innerHTML;
 
